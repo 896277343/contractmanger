@@ -1,0 +1,6 @@
+{% extends "contracts/base.html" %}
+{% block content %}
+<div class="card"><h1>更新日志</h1><p class="muted">记录合同编辑、产品和物料等明细变更，以及 OA、历史 Excel 导入操作。业务员只能查看自己合同的记录。</p><form method="get"><label>合同编号 <input name="q" value="{{ query }}" placeholder="输入合同编号"></label><button>查找</button></form></div>
+<div class="card scroll"><table><thead><tr><th>时间</th><th>合同</th><th>操作人</th><th>操作</th><th>变更内容</th></tr></thead><tbody>{% for event in page %}<tr><td>{{ event.at|date:"Y-m-d H:i:s" }}</td><td><a href="/admin/contracts/contract/{{ event.contract_id }}/change/">{{ event.contract.contract_number }}</a></td><td>{{ event.actor.get_full_name|default:event.actor.username|default:"系统" }}</td><td>{{ event.action }}</td><td style="white-space:normal;min-width:320px">{{ event.detail|default:"—" }}</td></tr>{% empty %}<tr><td colspan="5">暂无记录</td></tr>{% endfor %}</tbody></table></div>
+{% if page.has_other_pages %}<p>{% if page.has_previous %}<a href="?q={{ query|urlencode }}&page={{ page.previous_page_number }}">上一页</a>{% endif %} 第 {{ page.number }} / {{ page.paginator.num_pages }} 页 {% if page.has_next %}<a href="?q={{ query|urlencode }}&page={{ page.next_page_number }}">下一页</a>{% endif %}</p>{% endif %}
+{% endblock %}
