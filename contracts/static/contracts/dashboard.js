@@ -59,6 +59,19 @@
     update(url, true, !url.hash);
   });
 
+  document.addEventListener('click', function (event) {
+    const row = event.target.closest('.contract-panel .contract-row');
+    if (!row || event.target.closest('a, button, input, select') || event.button !== 0) return;
+    window.location.assign(row.dataset.href);
+  });
+
+  document.addEventListener('keydown', function (event) {
+    const row = event.target.closest('.contract-panel .contract-row');
+    if (!row || event.target !== row || !['Enter', ' '].includes(event.key)) return;
+    event.preventDefault();
+    window.location.assign(row.dataset.href);
+  });
+
   document.addEventListener('submit', function (event) {
     const form = event.target;
     if (!form.matches('.dashboard form[method="get"]')) return;

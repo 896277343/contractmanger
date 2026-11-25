@@ -113,6 +113,8 @@ class ImportTests(TestCase):
         Contract.objects.create(contract_number="OTHER-2026", salesperson=other, signed_on=today, amount=Decimal("200"), currency="美元", country="法国")
         response = self.client.get(reverse("dashboard"))
         self.assertContains(response, "结构分布")
+        self.assertContains(response, 'class="contract-row" data-href="/admin/contracts/contract/')
+        self.assertContains(response, 'class="customer-clip"')
         self.assertNotContains(response, "业务员业绩榜")
         self.assertNotIn("sales_ranking", response.context)
         self.assertEqual(response.context["count"], 1)
