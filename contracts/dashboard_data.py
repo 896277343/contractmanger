@@ -49,26 +49,6 @@ def link(params, **changes):
     return "?" + urlencode(values)
 
 
-def yearly_sales_ranking(user, year):
-    """Share annual signed totals without exposing another owner's contracts."""
-    rows = defaultdict(lambda: {"count": 0, "rmb": Decimal(), "unconverted": 0})
-    contracts = Contract.objects.filter(signed_on__year=year, salesperson__is_active=True).select_related("salesperson")
-    for contract in contracts:
-        row = rows[contract.salesperson_id]
-        row["name"] = contract.salesperson.get_full_name() or contract.salesperson.username
-        row["count"] += 1
-        converted, _, _ = conversion(contract.amount, contract.currency, contract_rate=contract.exchange_rate)
-        if converted is None:
-            row["unconverted"] += 1
-        else:
-            row["rmb"] += converted
-    if user.pk not in rows:
-        rows[user.pk]["name"] = user.get_full_name() or user.username
-    ranking = sorted(rows.items(), key=lambda pair: (-pair[1]["rmb"], -pair[1]["count"], pair[1]["name"]))
-    largest = ranking[0][1]["rmb"] if ranking else Decimal()
-    return [{"rank": index, "name": value["name"], "count": value["count"], "amount": money(value["rmb"]), "unconverted": value["unconverted"], "mine": owner_id == user.pk, "width": max(3, round(float(value["rmb"] / largest * 100))) if largest else 3} for index, (owner_id, value) in enumerate(ranking, 1)]
-
-
 def build_dashboard(user, params):
     privileged = user.is_superuser or user.groups.filter(name__in=["领导", "信息处理员"]).exists()
     base = Contract.objects.all() if privileged else Contract.objects.filter(salesperson=user)

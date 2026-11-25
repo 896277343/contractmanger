@@ -11,12 +11,11 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 from .parser import extract_oa_html, parse_oa
 from .excel_import import parse_workbook
-from .dashboard_data import build_dashboard, yearly_sales_ranking
+from .dashboard_data import build_dashboard
 
 
 def visible_contracts(user):
@@ -93,8 +92,6 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     context = build_dashboard(request.user, request.GET)
-    context["competition_year"] = timezone.localdate().year
-    context["sales_ranking"] = yearly_sales_ranking(request.user, context["competition_year"])
     context["export_url"] = reverse("export") + ("?" + request.GET.urlencode() if request.GET else "")
     return render(request, "contracts/dashboard.html", context)
 
