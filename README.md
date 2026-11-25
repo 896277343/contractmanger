@@ -45,6 +45,6 @@ python manage.py runserver
 
 GitHub 仓库只保存代码。`data/`（含 SQLite 数据库与备份）、`.env`、虚拟环境和静态文件收集目录均被 Git 忽略；生产数据库仍保存在 VPS，单独备份。
 
-本地完成修改后，在 PowerShell 运行 `./scripts/publish.ps1 "本次修改说明"`，脚本只暂存项目代码、检查提交内容、提交并推送到 `origin`。首次使用需先连接私有 GitHub 仓库，并完成 Git 身份验证。
+本地完成修改后，双击 `scripts/publish.cmd`，或在 PowerShell 运行 `./scripts/publish.ps1 "本次修改说明"`。脚本只暂存项目代码、检查提交内容、提交并推送到 `origin`。
 
 服务器首次接入 Git 仓库后，使用 `sudo bash /opt/contractmanger/scripts/update_server.sh` 更新。脚本先备份当前 SQLite 数据库，然后只快进拉取 `main`，安装依赖、执行迁移、收集静态文件并重启 `contractmanger` 服务；不会从 GitHub 下载或覆盖数据库。当前手动上传的服务器目录在首次接入 Git 时需单独处理，不能直接对现有目录运行 `git reset --hard`。
