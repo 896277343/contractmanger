@@ -1,8 +1,12 @@
 import json
+import hashlib
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
+from functools import lru_cache
+from pathlib import Path
 from urllib.parse import urlencode
 from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -23,6 +27,14 @@ def visible_contracts(user):
     if user.is_superuser or user.groups.filter(name__in=["领导", "信息处理员"]).exists():
         return qs
     return qs.filter(salesperson=user)
+
+
+@lru_cache(maxsize=1)
+def dashboard_asset_version():
+    digest = hashlib.sha256()
+    for name in ("dashboard.css", "dashboard.js"):
+        digest.update((Path(settings.BASE_DIR) / "contracts" / "static" / "contracts" / name).read_bytes())
+    return digest.hexdigest()[:12]
 
 
 def attach_flows(contract, numbers, source):
@@ -92,6 +104,7 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     context = build_dashboard(request.user, request.GET)
+    context["dashboard_asset_version"] = dashboard_asset_version()
     context["export_url"] = reverse("export") + ("?" + request.GET.urlencode() if request.GET else "")
     return render(request, "contracts/dashboard.html", context)
 

@@ -101,6 +101,7 @@ class ImportTests(TestCase):
     def test_dashboard_renders_after_import(self):
         self.client.post(reverse("upload"), {"file": SimpleUploadedFile("oa.html", SAMPLE, content_type="text/html")})
         self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
+        self.assertIn("?v=", self.client.get(reverse("dashboard")).content.decode())
         result = self.client.get(reverse("dashboard"), {"q": "ZY-001", "year": "2026"})
         self.assertEqual(result.context["count"], 0)
         self.assertContains(result, "ZY-001")

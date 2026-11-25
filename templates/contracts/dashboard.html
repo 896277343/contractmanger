@@ -1,6 +1,6 @@
 {% extends "contracts/base.html" %}
 {% load static %}
-{% block head %}<link rel="stylesheet" href="{% static 'contracts/dashboard.css' %}"><script src="{% static 'contracts/dashboard.js' %}" defer></script>{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'contracts/dashboard.css' %}?v={{ dashboard_asset_version }}"><script src="{% static 'contracts/dashboard.js' %}?v={{ dashboard_asset_version }}" defer></script>{% endblock %}
 {% block content %}
 <div class="dashboard" aria-live="polite">
   <div class="page-heading"><div><span class="eyebrow">SALES INTELLIGENCE</span><h1>合同经营看板</h1><p>从签订到回款，查看每一份合同的进展</p></div><div class="heading-actions"><a class="outline-button" href="/upload/">＋ 导入 OA</a>{% if privileged %}<a class="outline-button" href="/import-excel/">导入历史 Excel</a><a class="outline-button export-button" href="{{ export_url }}">导出当前范围 · {{ detail_count }} 份</a>{% endif %}</div></div>
