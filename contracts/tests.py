@@ -106,6 +106,19 @@ class ImportTests(TestCase):
         self.assertContains(result, "ZY-001")
         self.assertContains(result, "未计入签订业绩")
 
+    def test_salesperson_sees_team_totals_but_only_own_contracts(self):
+        other = get_user_model().objects.create_user("other", password="safe-password-123")
+        today = timezone.localdate()
+        Contract.objects.create(contract_number="OWN-2026", salesperson=self.user, signed_on=today, amount=Decimal("100"), currency="美元", country="美国")
+        Contract.objects.create(contract_number="OTHER-2026", salesperson=other, signed_on=today, amount=Decimal("200"), currency="美元", country="法国")
+        response = self.client.get(reverse("dashboard"))
+        self.assertContains(response, "结构分布")
+        self.assertContains(response, "业务员业绩榜")
+        self.assertEqual([row["amount"] for row in response.context["sales_ranking"]], ["1,400.00", "700.00"])
+        self.assertEqual(response.context["count"], 1)
+        self.assertNotContains(response, "OTHER-2026")
+        self.assertNotContains(response, "法国")
+
     def test_oa_supplements_materials_without_changing_existing_products(self):
         contract = Contract.objects.create(contract_number="ZY-001", salesperson=self.user, customer_name="Excel customer")
         LineItem.objects.create(contract=contract, position=1, model="OLD-1", quantity=1)

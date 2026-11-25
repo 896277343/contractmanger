@@ -1,1 +1,9 @@
-{% extends "contracts/base.html" %}{% block content %}<div class="card" style="max-width:400px;margin:70px auto"><h1>登录</h1><form method="post">{% csrf_token %}<p><label>用户名<br><input name="username" autocomplete="username" required></label></p><p><label>密码<br><input name="password" type="password" autocomplete="current-password" required></label></p><button>登录</button></form></div>{% endblock %}
+{% extends "contracts/base.html" %}
+{% load static %}
+{% block head %}<link rel="stylesheet" href="{% static 'contracts/login.css' %}">{% endblock %}
+{% block content %}
+<div class="login-layout">
+  <div class="login-intro"><span class="login-eyebrow">CONTRACT MANAGEMENT</span><h1>合同管理系统</h1><p>集中管理外贸合同、OA 流程与执行进展，让每一份合同都有迹可循。</p><div class="login-mark"><span>合同</span><span>执行</span><span>业绩</span></div></div>
+  <div class="login-card"><div class="login-icon" aria-hidden="true">↗</div><h2>欢迎登录</h2><p>使用分配给你的账号进入工作台</p><form method="post">{% csrf_token %}<label for="login-username">用户名</label><input id="login-username" name="username" autocomplete="username" autofocus required><label for="login-password">密码</label><input id="login-password" name="password" type="password" autocomplete="current-password" required><button type="submit">登录系统 <span>→</span></button></form></div>
+</div>
+{% endblock %}
