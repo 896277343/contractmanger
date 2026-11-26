@@ -36,6 +36,8 @@ class ContractSession:
         if data is not None:
             headers["Content-Type"] = "application/x-www-form-urlencoded" if form else "application/json"
             headers["X-CSRFToken"] = self.csrf
+            headers["Origin"] = SERVER
+            headers["Referer"] = SERVER + "/"
             body = urlencode(data).encode("utf-8") if form else json.dumps(data, ensure_ascii=False).encode("utf-8")
         else:
             body = None

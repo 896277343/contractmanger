@@ -180,6 +180,16 @@ class ImportTests(TestCase):
         self.assertEqual(Material.objects.count(), 1)
         self.assertEqual(AuditEvent.objects.filter(action="OA桌面同步").count(), 1)
 
+    def test_desktop_login_over_https_requires_matching_origin(self):
+        from django.test import override_settings
+        with override_settings(ALLOWED_HOSTS=["contracts.68988008.xyz"]):
+            client = Client(enforce_csrf_checks=True)
+            token = client.get(reverse("desktop_csrf"), secure=True, HTTP_HOST="contracts.68988008.xyz").json()["csrf_token"]
+            response = client.post(reverse("desktop_login"), {"username": "sales", "password": "safe-password-123"}, secure=True, HTTP_HOST="contracts.68988008.xyz", HTTP_X_CSRFTOKEN=token)
+            self.assertEqual(response.status_code, 403)
+            response = client.post(reverse("desktop_login"), {"username": "sales", "password": "safe-password-123"}, secure=True, HTTP_HOST="contracts.68988008.xyz", HTTP_X_CSRFTOKEN=token, HTTP_ORIGIN="https://contracts.68988008.xyz")
+            self.assertEqual(response.status_code, 200)
+
     def test_desktop_sync_does_not_take_over_another_owner_contract(self):
         other = get_user_model().objects.create_user("other", password="safe-password-123")
         Contract.objects.create(contract_number="ZY-001", salesperson=other)
