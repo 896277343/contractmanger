@@ -38,7 +38,7 @@ if ! sudo -u contractapp "$PYTHON" -c 'import xlrd' >/dev/null 2>&1; then
         echo "Python site-packages 路径异常：$SITE_PACKAGES" >&2
         exit 1
     fi
-    sudo -u contractapp "$APP_DIR/.venv/bin/pip" install --target "$SITE_PACKAGES" 'xlrd>=2.0.2,<3'
+    sudo -u contractapp "$APP_DIR/.venv/bin/python" -m pip install --target "$SITE_PACKAGES" 'xlrd>=2.0.2,<3'
 fi
 sudo -u contractapp "$PYTHON" -c 'import django, openpyxl, bs4, xlrd'
 sudo -u contractapp bash -c 'set -e; set -a; . /opt/contractmanger/.env; set +a; cd /opt/contractmanger; .venv312/bin/python manage.py migrate --noinput; .venv312/bin/python manage.py collectstatic --noinput; .venv312/bin/python manage.py check --deploy'
