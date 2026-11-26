@@ -20,7 +20,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.debug import sensitive_post_parameters
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
-from .parser import extract_oa_html, parse_oa
+from .parser import extract_oa_html, parse_oa, usable_contract_number
 from .excel_import import parse_workbook
 from .workflow_import import parse_workflow_xls
 from .oa_client import describe_oa_page, fetch_oa_html
@@ -192,7 +192,7 @@ def _validate_desktop_oa(data):
     contract_number = data.get("contract_number")
     if not isinstance(number, str) or not number.isdigit() or len(number) > 12:
         raise ValueError("OA 流水号无效")
-    if not isinstance(contract_number, str) or not contract_number.strip() or len(contract_number) > 100:
+    if not usable_contract_number(contract_number) or len(contract_number) > 100:
         raise ValueError("合同号无效或过长")
     if not isinstance(data.get("sha256"), str) or len(data["sha256"]) != 64 or any(c not in "0123456789abcdef" for c in data["sha256"]):
         raise ValueError("OA 页面摘要无效")
@@ -251,7 +251,7 @@ def desktop_resolve_owner(request):
     try:
         data = json.loads(request.body)
         number, signer = data["contract_number"], data["oa_signer"]
-        if not isinstance(number, str) or not number.strip() or len(number) > 100 or not isinstance(signer, str) or len(signer) > 100:
+        if not usable_contract_number(number) or len(number) > 100 or not isinstance(signer, str) or len(signer) > 100:
             raise ValueError("合同号或签订人无效")
         owner, existing = resolve_oa_owner(request.user, number, signer)
         return JsonResponse({"owner": owner.get_full_name() or owner.username, "existing": bool(existing)})

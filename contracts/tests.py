@@ -160,6 +160,35 @@ class ImportTests(TestCase):
         self.assertEqual(parse_oa(page)["contract_number"], "R26063")
         self.assertIn("页面流水号 298175", describe_oa_page(page))
 
+    def test_placeholder_internal_number_uses_customer_number_and_merges_lines(self):
+        existing = Contract.objects.create(contract_number="F09-261012-01", salesperson=self.user)
+        first = LineItem.objects.create(contract=existing, position=1, product_name="旧商品", model="OLD", quantity=1, product_category="保留分类")
+        LineItem.objects.create(contract=existing, position=5, product_name="额外行")
+        html = SAMPLE.replace(b'ZY-001', b'/').replace(b'</body>', '<input type="hidden" title="甲方合同号" value="F09-261012-01"></body>'.encode())
+        parsed = parse_oa(html)
+        self.assertEqual(parsed["contract_number"], "F09-261012-01")
+        self.assertEqual(parsed["customer_contract_number"], "F09-261012-01")
+        self.client.post(reverse("upload"), {"file": SimpleUploadedFile("oa.html", html)})
+        first.refresh_from_db()
+        self.assertEqual(first.product_name, "Meter")
+        self.assertEqual(first.model, "M-1")
+        self.assertEqual(first.product_category, "保留分类")
+        self.assertEqual(existing.items.get(position=5).product_name, "额外行")
+        self.assertFalse(Contract.objects.filter(contract_number="/").exists())
+
+    def test_placeholder_contract_number_without_fallback_is_rejected(self):
+        html = SAMPLE.replace(b'ZY-001', b'/')
+        with self.assertRaisesMessage(ValueError, "没有找到有效的"):
+            parse_oa(html)
+
+    def test_desktop_api_rejects_placeholder_contract_number(self):
+        data = parse_oa(SAMPLE)
+        data["contract_number"] = "/"
+        data["currency"] = "人民币"
+        response = self.client.post(reverse("desktop_sync"), data=json.dumps(data), content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Contract.objects.exists())
+
     def test_oa_contract_number_alias_start_date_and_line_merge(self):
         contract = Contract.objects.create(contract_number="ZY-001", salesperson=self.user)
         first = LineItem.objects.create(contract=contract, position=1, product_name="旧商品", model="OLD", quantity=1, notes="业务备注", product_category="分析仪", supplier="厂家A", purchase_price=Decimal("8"))

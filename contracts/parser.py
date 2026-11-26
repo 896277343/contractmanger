@@ -6,6 +6,10 @@ from zipfile import BadZipFile, ZipFile
 from bs4 import BeautifulSoup
 
 
+def usable_contract_number(value):
+    return isinstance(value, str) and bool(value.strip()) and value.strip().lower() not in {"/", "-", "—", "无", "暂无", "未填写", "n/a", "na"}
+
+
 def extract_oa_html(content: bytes, filename: str) -> bytes:
     if filename.lower().endswith((".html", ".htm")):
         return content
@@ -52,9 +56,10 @@ def parse_oa(content: bytes):
                 if title == name or title.endswith("." + name):
                     return value
         return ""
-    contract_number = find("日立信合同号", "合同号")
+    customer_contract_number = find("甲方合同号")
+    contract_number = next((value for value in (find("日立信合同号"), find("合同号"), customer_contract_number) if usable_contract_number(value)), "")
     if not contract_number:
-        raise ValueError("没有找到日立信合同号或合同号，请确认 OA 导出格式")
+        raise ValueError("没有找到有效的日立信合同号、合同号或甲方合同号，请确认 OA 导出格式")
     signed_on = None
     for table in soup.find_all("table"):
         if "流程开始" not in table.get_text(" ", strip=True)[:100]:
