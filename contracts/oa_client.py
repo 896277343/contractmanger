@@ -3,7 +3,7 @@ import http.cookiejar
 import re
 import secrets
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urljoin, urlparse
 from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_opener
 
 from bs4 import BeautifulSoup
@@ -59,6 +59,21 @@ def describe_oa_page(page):
     return f"页面标题“{title[:40]}”、带字段名的输入框 {len(titled_inputs)} 个、页面流水号 {run_match.group(1) if run_match else '未找到'}、页面大小 {len(page)} 字节、页面提示“{excerpt or '无可见文字'}”"
 
 
+def _form_frame_url(page, wrapper_url, run_id):
+    soup = BeautifulSoup(page.decode("utf-8", errors="replace"), "html.parser")
+    frame = soup.find("iframe", id="print_frm")
+    if not frame or not frame.get("src"):
+        raise ValueError("OA 打印页未包含原始表单框架，请确认流水号及访问权限")
+    frame_url = urljoin(wrapper_url, frame["src"])
+    parsed = urlparse(frame_url)
+    wrapper = urlparse(wrapper_url)
+    if (parsed.scheme, parsed.netloc) != (wrapper.scheme, wrapper.netloc) or parsed.path != "/general/approve_center/list/print.php":
+        raise ValueError("OA 原始表单地址不符合预期")
+    if parse_qs(parsed.query).get("RUN_ID") != [run_id]:
+        raise ValueError("OA 原始表单流水号与输入不一致")
+    return frame_url
+
+
 def fetch_oa_html(username, password, run_id):
     if not re.fullmatch(r"[0-9]{1,12}", run_id):
         raise ValueError("请输入有效的 OA 流水号")
@@ -72,10 +87,15 @@ def fetch_oa_html(username, password, run_id):
         body = urlencode({"UNAME": username, "PASSWORD": encrypted, "encode_type": "1"}).encode("utf-8")
         login_result = _get(opener, base + "/logincheck.php", body, referer=base + "/")
         query = urlencode({"actionType": "view", "MENU_FLAG": "", "RUN_ID": run_id, "PRCS_KEY_ID": "", "FLOW_ID": "199"})
-        print_page = _get(opener, base + "/general/approve_center/list/print/index.php?" + query)
+        wrapper_url = base + "/general/approve_center/list/print/index.php?" + query
+        print_page = _get(opener, wrapper_url)
         if "用户未登录" in _visible_text(print_page)[:150]:
             detail = _visible_text(login_result)[:120]
             raise ValueError("OA 登录未成功，打印页仍显示“用户未登录”" + (f"；OA 提示：{detail}" if detail else "；请检查账号、密码或验证码"))
+        if BeautifulSoup(print_page, "html.parser").find("iframe", id="print_frm"):
+            print_page = _get(opener, _form_frame_url(print_page, wrapper_url, run_id), referer=wrapper_url)
+            if "用户未登录" in _visible_text(print_page)[:150]:
+                raise ValueError("OA 原始表单显示“用户未登录”，请检查账号或重新登录")
         return print_page
     except (TimeoutError, HTTPError, URLError, OSError) as exc:
         raise ValueError("服务器无法连接 OA 内网地址，或 OA 登录失败；请检查服务器到 OA 的网络及账号") from exc

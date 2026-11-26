@@ -157,6 +157,24 @@ class ImportTests(TestCase):
         self.assertEqual(parse_oa(page)["contract_number"], "R26063")
         self.assertIn("页面流水号 298175", describe_oa_page(page))
 
+    @patch("contracts.oa_client._get")
+    @patch("contracts.oa_client._encrypt_password", return_value="encrypted")
+    def test_online_oa_follows_original_form_iframe(self, encrypt, get_page):
+        wrapper = b'<iframe id="print_frm" src="../print.php?RUN_ID=298175&amp;FLOW_ID=199"></iframe>'
+        form = '<script>var g_run_id = "298175";</script><input title="合同号" value="R26063">'.encode()
+        get_page.side_effect = [b"login page", b"logged in", wrapper, form]
+        result = fetch_oa_html("account", "secret", "298175")
+        self.assertEqual(parse_oa(result)["contract_number"], "R26063")
+        self.assertIn("/general/approve_center/list/print.php?RUN_ID=298175", get_page.call_args.args[1])
+
+    @patch("contracts.oa_client._get")
+    @patch("contracts.oa_client._encrypt_password", return_value="encrypted")
+    def test_online_oa_rejects_mismatched_iframe_run_id(self, encrypt, get_page):
+        wrapper = b'<iframe id="print_frm" src="../print.php?RUN_ID=999"></iframe>'
+        get_page.side_effect = [b"login page", b"logged in", wrapper]
+        with self.assertRaisesMessage(ValueError, "流水号与输入不一致"):
+            fetch_oa_html("account", "secret", "298175")
+
     def test_zip_with_multiple_html_files_is_rejected(self):
         buffer = BytesIO()
         with ZipFile(buffer, "w") as archive:
