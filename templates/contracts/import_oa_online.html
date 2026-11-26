@@ -1,0 +1,5 @@
+{% extends "contracts/base.html" %}
+{% block content %}
+<h1>按流水号读取 OA</h1>
+<div class="card" style="max-width:560px"><p>输入你自己的 OA 账号、密码和流水号。系统会临时登录内网 OA，读取对应的合同执行任务单，并将信息导入当前登录的业务员账号。密码不会保存。</p><form method="post" autocomplete="off">{% csrf_token %}<p><label>OA 用户名<br><input name="oa_username" autocomplete="username" required></label></p><p><label>OA 密码<br><input name="oa_password" type="password" autocomplete="off" required></label></p><p><label>OA 流水号<br><input name="run_id" inputmode="numeric" pattern="[0-9]{1,12}" placeholder="例如 298175" required></label></p><button type="submit">登录 OA 并导入</button></form><p class="muted">需要当前运行本系统的设备能够访问 OA 内网地址。已存在的合同只补充 OA 流程、物料和出库记录；不会重复新增产品行，也不会覆盖其他业务员的合同。</p></div>
+{% endblock %}

@@ -22,6 +22,7 @@ from .currency import conversion
 from .parser import parse_oa
 from .excel_import import flow_numbers, parse_workbook
 from .workflow_import import contract_candidates, parse_workflow_xls
+from .oa_client import fetch_oa_html
 
 
 SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
@@ -118,6 +119,30 @@ class ImportTests(TestCase):
         response = self.client.post(reverse("upload"), {"file": SimpleUploadedFile("oa.zip", buffer.getvalue())})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Contract.objects.get().contract_number, "ZY-001")
+
+    @patch("contracts.views.fetch_oa_html")
+    def test_online_oa_import_uses_current_salesperson_and_deduplicates(self, fetch):
+        fetch.return_value = SAMPLE
+        payload = {"oa_username": "my-oa-account", "oa_password": "temporary-secret", "run_id": "12345"}
+        first = self.client.post(reverse("import_oa_online"), payload)
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(Contract.objects.get().salesperson, self.user)
+        self.assertEqual(OAFlow.objects.count(), 1)
+        self.client.post(reverse("import_oa_online"), payload)
+        self.assertEqual(Contract.objects.count(), 1)
+        self.assertEqual(OAFlow.objects.count(), 1)
+        self.assertNotIn("temporary-secret", str(dict(self.client.session)))
+        fetch.assert_called_with("my-oa-account", "temporary-secret", "12345")
+
+    @patch("contracts.views.fetch_oa_html")
+    def test_online_oa_cannot_change_another_salesperson_contract(self, fetch):
+        other = get_user_model().objects.create_user("other-owner", password="safe-password-123")
+        Contract.objects.create(contract_number="ZY-001", salesperson=other)
+        fetch.return_value = SAMPLE
+        response = self.client.post(reverse("import_oa_online"), {"oa_username": "user", "oa_password": "secret", "run_id": "12345"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Contract.objects.get().salesperson, other)
+        self.assertEqual(OAFlow.objects.count(), 0)
 
     def test_zip_with_multiple_html_files_is_rejected(self):
         buffer = BytesIO()

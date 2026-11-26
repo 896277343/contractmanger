@@ -16,10 +16,12 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.debug import sensitive_post_parameters
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 from .parser import extract_oa_html, parse_oa
 from .excel_import import parse_workbook
 from .workflow_import import parse_workflow_xls
+from .oa_client import fetch_oa_html
 from .dashboard_data import build_dashboard
 
 
@@ -85,6 +87,24 @@ def oa_import_detail(data, materials_added, outbound_added):
             f"物料内容：{'；'.join(material_lines) or '无'}；识别已发货物料 {len(data['outbound_items'])} 条，本次新增 {outbound_added} 条；Line items 未变更")
 
 
+def save_oa_import(request, data, filename, source):
+    with transaction.atomic():
+        contract = Contract.objects.filter(contract_number=data["contract_number"]).first()
+        if contract:
+            if not (request.user.is_superuser or contract.salesperson_id == request.user.id or request.user.groups.filter(name="信息处理员").exists()):
+                raise ValueError("该合同归属其他业务员")
+            added = attach_flows(contract, [data["oa_number"]], source)
+            materials_added, outbound_added = add_oa_details(contract, data)
+            AuditEvent.objects.create(contract=contract, actor=request.user, action="补充OA详情", detail=oa_import_detail(data, materials_added, outbound_added))
+        else:
+            contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=request.user, customer_name=data["customer_name"], currency=data["items"][0]["currency"] if data["items"] else "", source_filename=filename[:255], source_sha256=data["sha256"])
+            attach_flows(contract, [data["oa_number"]], source)
+            materials_added, outbound_added = add_oa_details(contract, data)
+            AuditEvent.objects.create(contract=contract, actor=request.user, action=source, detail=oa_import_detail(data, materials_added, outbound_added))
+            added = 1
+    return contract, added, materials_added, outbound_added
+
+
 @require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.method == "POST":
@@ -131,25 +151,32 @@ def upload(request):
             return redirect("upload")
         try:
             data = parse_oa(extract_oa_html(file.read(), file.name))
-            with transaction.atomic():
-                contract = Contract.objects.filter(contract_number=data["contract_number"]).first()
-                if contract:
-                    if not (request.user.is_superuser or contract.salesperson_id == request.user.id or request.user.groups.filter(name="信息处理员").exists()):
-                        raise ValueError("该合同归属其他业务员")
-                    added = attach_flows(contract, [data["oa_number"]], "OA导入")
-                    materials_added, outbound_added = add_oa_details(contract, data)
-                    AuditEvent.objects.create(contract=contract, actor=request.user, action="补充OA详情", detail=oa_import_detail(data, materials_added, outbound_added))
-                else:
-                    contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=request.user, customer_name=data["customer_name"], currency=data["items"][0]["currency"] if data["items"] else "", source_filename=file.name[:255], source_sha256=data["sha256"])
-                    attach_flows(contract, [data["oa_number"]], "OA导入")
-                    materials_added, outbound_added = add_oa_details(contract, data)
-                    AuditEvent.objects.create(contract=contract, actor=request.user, action="OA导入", detail=oa_import_detail(data, materials_added, outbound_added))
-                    added = 1
+            contract, added, materials_added, outbound_added = save_oa_import(request, data, file.name, "OA导入")
             messages.success(request, f"合同 {contract.contract_number} 已保存，新增 {added} 个 OA 流程、{materials_added} 条物料、{outbound_added} 条出库记录；Line items 未变更")
             return redirect(reverse("dashboard") + "?" + urlencode({"q": contract.contract_number}))
         except (ValueError, IntegrityError) as exc:
             messages.error(request, str(exc))
     return render(request, "contracts/upload.html")
+
+
+@login_required
+@sensitive_post_parameters("oa_password")
+@require_http_methods(["GET", "POST"])
+def import_oa_online(request):
+    if request.method == "POST":
+        run_id = request.POST.get("run_id", "").strip()
+        try:
+            html = fetch_oa_html(request.POST.get("oa_username", "").strip(), request.POST.get("oa_password", ""), run_id)
+            data = parse_oa(html)
+            if data["oa_number"] and data["oa_number"] != run_id:
+                raise ValueError("OA 页面流水号与输入值不一致，已停止导入")
+            data["oa_number"] = run_id
+            contract, added, materials_added, outbound_added = save_oa_import(request, data, f"OA在线流水号-{run_id}", "OA在线导入")
+            messages.success(request, f"合同 {contract.contract_number} 已保存，新增 {added} 个 OA 流程、{materials_added} 条物料、{outbound_added} 条出库记录；Line items 未变更")
+            return redirect(reverse("dashboard") + "?" + urlencode({"q": contract.contract_number}))
+        except (ValueError, IntegrityError) as exc:
+            messages.error(request, str(exc))
+    return render(request, "contracts/import_oa_online.html")
 
 
 @login_required

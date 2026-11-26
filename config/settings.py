@@ -22,6 +22,7 @@ TIME_ZONE = "Asia/Shanghai"
 USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+OA_BASE_URL = os.environ.get("OA_BASE_URL", "http://192.168.1.80:8080")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = not DEBUG
