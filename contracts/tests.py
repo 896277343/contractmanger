@@ -200,6 +200,40 @@ class ImportTests(TestCase):
         self.assertEqual(Contract.objects.get().salesperson, other)
         self.assertEqual(Material.objects.count(), 0)
 
+    def test_admin_desktop_sync_assigns_new_contract_by_oa_signer(self):
+        admin = get_user_model().objects.create_superuser("administrator", password="safe-password-123")
+        self.user.first_name = "程"
+        self.user.last_name = "耐红"
+        self.user.save()
+        self.user.groups.add(Group.objects.get(name="业务员"))
+        self.client.force_login(admin)
+        data = parse_oa(SAMPLE)
+        data["oa_signer"] = "程耐红"
+        data["currency"] = "人民币"
+        preview = self.client.post(reverse("desktop_resolve_owner"), data=json.dumps(data), content_type="application/json")
+        self.assertEqual(preview.json()["owner"], self.user.get_full_name())
+        response = self.client.post(reverse("desktop_sync"), data=json.dumps(data), content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Contract.objects.get().salesperson, self.user)
+        self.assertEqual(AuditEvent.objects.get(action="OA桌面同步").actor, admin)
+
+    def test_admin_desktop_sync_keeps_existing_owner_and_rejects_unknown_signer(self):
+        admin = get_user_model().objects.create_superuser("administrator", password="safe-password-123")
+        self.client.force_login(admin)
+        data = parse_oa(SAMPLE)
+        data["oa_signer"] = "没有对应账号"
+        data["currency"] = "人民币"
+        rejected = self.client.post(reverse("desktop_sync"), data=json.dumps(data), content_type="application/json")
+        self.assertEqual(rejected.status_code, 400)
+        self.assertEqual(Contract.objects.count(), 0)
+        existing = Contract.objects.create(contract_number="ZY-001", salesperson=self.user)
+        preview = self.client.post(reverse("desktop_resolve_owner"), data=json.dumps(data), content_type="application/json")
+        self.assertTrue(preview.json()["existing"])
+        accepted = self.client.post(reverse("desktop_sync"), data=json.dumps(data), content_type="application/json")
+        self.assertEqual(accepted.status_code, 200)
+        existing.refresh_from_db()
+        self.assertEqual(existing.salesperson, self.user)
+
     @patch("contracts.oa_client._get")
     @patch("contracts.oa_client._encrypt_password", return_value="encrypted")
     def test_online_oa_follows_original_form_iframe(self, encrypt, get_page):

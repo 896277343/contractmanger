@@ -88,17 +88,33 @@ def oa_import_detail(data, materials_added, outbound_added):
             f"物料内容：{'；'.join(material_lines) or '无'}；识别已发货物料 {len(data['outbound_items'])} 条，本次新增 {outbound_added} 条；Line items 未变更")
 
 
+def resolve_oa_owner(user, contract_number, signer):
+    existing = Contract.objects.filter(contract_number=contract_number).select_related("salesperson").first()
+    if existing:
+        if not (user.is_superuser or existing.salesperson_id == user.pk or user.groups.filter(name="信息处理员").exists()):
+            raise ValueError("该合同归属其他业务员")
+        return existing.salesperson, existing
+    if not (user.is_superuser or user.groups.filter(name="信息处理员").exists()):
+        return user, None
+    normalized = "".join((signer or "").split())
+    if not normalized:
+        raise ValueError("OA 未填写合同签订人，无法自动分配业务员")
+    candidates = get_user_model().objects.filter(is_active=True, is_superuser=False, groups__name="业务员").distinct()
+    matches = [person for person in candidates if normalized in ("".join(person.username.split()), "".join(person.get_full_name().split()))]
+    if len(matches) != 1:
+        raise ValueError(f"合同签订人“{signer}”未唯一匹配业务员账号；请检查账号姓名和业务员分组")
+    return matches[0], None
+
+
 def save_oa_import(request, data, filename, source):
     with transaction.atomic():
-        contract = Contract.objects.filter(contract_number=data["contract_number"]).first()
+        owner, contract = resolve_oa_owner(request.user, data["contract_number"], data["oa_signer"])
         if contract:
-            if not (request.user.is_superuser or contract.salesperson_id == request.user.id or request.user.groups.filter(name="信息处理员").exists()):
-                raise ValueError("该合同归属其他业务员")
             added = attach_flows(contract, [data["oa_number"]], source)
             materials_added, outbound_added = add_oa_details(contract, data)
             AuditEvent.objects.create(contract=contract, actor=request.user, action="补充OA详情", detail=oa_import_detail(data, materials_added, outbound_added))
         else:
-            contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=request.user, customer_name=data["customer_name"], currency=data.get("currency") or (data["items"][0]["currency"] if data["items"] else ""), source_filename=filename[:255], source_sha256=data["sha256"])
+            contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=owner, customer_name=data["customer_name"], currency=data.get("currency") or (data["items"][0]["currency"] if data["items"] else ""), source_filename=filename[:255], source_sha256=data["sha256"])
             attach_flows(contract, [data["oa_number"]], source)
             materials_added, outbound_added = add_oa_details(contract, data)
             AuditEvent.objects.create(contract=contract, actor=request.user, action=source, detail=oa_import_detail(data, materials_added, outbound_added))
@@ -168,6 +184,22 @@ def desktop_sync(request):
         contract, flows, materials, outbound = save_oa_import(request, data, f"OA桌面同步-{data['oa_number']}", "OA桌面同步")
         return JsonResponse({"contract_number": contract.contract_number, "flows_added": flows, "materials_added": materials, "outbound_added": outbound, "message": f"合同 {contract.contract_number} 已同步；新增 {flows} 个 OA 流程、{materials} 条物料、{outbound} 条出库记录"})
     except (ValueError, KeyError, TypeError, IntegrityError) as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def desktop_resolve_owner(request):
+    if len(request.body) > 4096:
+        return JsonResponse({"error": "预览内容过大"}, status=413)
+    try:
+        data = json.loads(request.body)
+        number, signer = data["contract_number"], data["oa_signer"]
+        if not isinstance(number, str) or not number.strip() or len(number) > 100 or not isinstance(signer, str) or len(signer) > 100:
+            raise ValueError("合同号或签订人无效")
+        owner, existing = resolve_oa_owner(request.user, number, signer)
+        return JsonResponse({"owner": owner.get_full_name() or owner.username, "existing": bool(existing)})
+    except (ValueError, KeyError, TypeError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
 

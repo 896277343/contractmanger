@@ -70,6 +70,9 @@ class ContractSession:
         fields = ("oa_number", "contract_number", "customer_contract_number", "oa_signer", "customer_name", "currency", "sha256", "materials", "outbound_items")
         return self.request("api/desktop/sync/", {key: data[key] for key in fields})
 
+    def resolve_owner(self, data):
+        return self.request("api/desktop/resolve-owner/", {"contract_number": data["contract_number"], "oa_signer": data["oa_signer"]})
+
 
 class SyncApp:
     def __init__(self, root):
@@ -192,8 +195,8 @@ class SyncApp:
 
     def fetch(self):
         run_id = self.run_id.get().strip()
-        if not self.oa or not re.fullmatch(r"\d{1,12}", run_id):
-            messagebox.showerror("缺少信息", "请先登录 OA 并输入有效流水号")
+        if not self.contract or not self.oa or not re.fullmatch(r"\d{1,12}", run_id):
+            messagebox.showerror("缺少信息", "请先登录合同系统和 OA，并输入有效流水号")
             return
         self.preview = None
         self.sync_button.configure(state="disabled")
@@ -209,12 +212,14 @@ class SyncApp:
             raise ValueError("OA 表单流水号与输入值不一致，已停止同步")
         data["oa_number"] = run_id
         data["currency"] = data["items"][0]["currency"] if data["items"] else ""
+        data["owner_preview"] = self.contract.resolve_owner(data)
         return data
 
     def _fetched(self, data):
         self.preview = data
         self.sync_button.configure(state="normal" if self.contract else "disabled")
-        lines = [f"OA 流水号：{data['oa_number']}", f"合同号：{data['contract_number']}", f"签订单位：{data['customer_name']}", f"合同签订人：{data['oa_signer']}", f"供货物料：{len(data['materials'])} 条", f"已发货物料：{len(data['outbound_items'])} 条", "", "供货物料预览："]
+        owner = data["owner_preview"]
+        lines = [f"OA 流水号：{data['oa_number']}", f"合同号：{data['contract_number']}", f"签订单位：{data['customer_name']}", f"合同签订人：{data['oa_signer']}", f"归属业务员：{owner['owner']}（{'已有合同，保持原归属' if owner['existing'] else '按签订人分配'}）", f"供货物料：{len(data['materials'])} 条", f"已发货物料：{len(data['outbound_items'])} 条", "", "供货物料预览："]
         lines += [f"{item['position']}. {item['code']}  {item['name']}  {item['specification']}  × {item['quantity'] or '-'}" for item in data["materials"][:30]]
         if len(data["materials"]) > 30:
             lines.append(f"另有 {len(data['materials']) - 30} 条未在预览中展开")
@@ -225,7 +230,7 @@ class SyncApp:
         if not self.contract or not self.preview:
             return
         data = self.preview
-        if not messagebox.askyesno("确认同步", f"将 OA {data['oa_number']} 的数据同步到合同 {data['contract_number']}？\n服务器将按当前登录账号判断合同归属。"):
+        if not messagebox.askyesno("确认同步", f"将 OA {data['oa_number']} 的数据同步到合同 {data['contract_number']}？\n归属业务员：{data['owner_preview']['owner']}"):
             return
         self._work("正在同步到 VPS…", lambda: self.contract.sync(data), self._synced)
 
