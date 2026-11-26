@@ -12,7 +12,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.core.paginator import Paginator
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.middleware.csrf import get_token
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
@@ -97,12 +98,77 @@ def save_oa_import(request, data, filename, source):
             materials_added, outbound_added = add_oa_details(contract, data)
             AuditEvent.objects.create(contract=contract, actor=request.user, action="补充OA详情", detail=oa_import_detail(data, materials_added, outbound_added))
         else:
-            contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=request.user, customer_name=data["customer_name"], currency=data["items"][0]["currency"] if data["items"] else "", source_filename=filename[:255], source_sha256=data["sha256"])
+            contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=request.user, customer_name=data["customer_name"], currency=data.get("currency") or (data["items"][0]["currency"] if data["items"] else ""), source_filename=filename[:255], source_sha256=data["sha256"])
             attach_flows(contract, [data["oa_number"]], source)
             materials_added, outbound_added = add_oa_details(contract, data)
             AuditEvent.objects.create(contract=contract, actor=request.user, action=source, detail=oa_import_detail(data, materials_added, outbound_added))
             added = 1
     return contract, added, materials_added, outbound_added
+
+
+@require_http_methods(["GET"])
+def desktop_csrf(request):
+    return JsonResponse({"csrf_token": get_token(request)})
+
+
+@sensitive_post_parameters("password")
+@require_http_methods(["POST"])
+def desktop_login(request):
+    user = authenticate(request, username=request.POST.get("username"), password=request.POST.get("password"))
+    if not user or not user.is_active:
+        return JsonResponse({"error": "合同系统用户名或密码错误"}, status=401)
+    login(request, user)
+    return JsonResponse({"username": user.username, "csrf_token": get_token(request)})
+
+
+def _validate_desktop_oa(data):
+    if not isinstance(data, dict):
+        raise ValueError("同步内容格式错误")
+    number = data.get("oa_number")
+    contract_number = data.get("contract_number")
+    if not isinstance(number, str) or not number.isdigit() or len(number) > 12:
+        raise ValueError("OA 流水号无效")
+    if not isinstance(contract_number, str) or not contract_number.strip() or len(contract_number) > 100:
+        raise ValueError("合同号无效或过长")
+    if not isinstance(data.get("sha256"), str) or len(data["sha256"]) != 64 or any(c not in "0123456789abcdef" for c in data["sha256"]):
+        raise ValueError("OA 页面摘要无效")
+    for key, limit in (("customer_contract_number", 100), ("oa_signer", 100), ("customer_name", 200)):
+        if not isinstance(data.get(key), str) or len(data[key]) > limit:
+            raise ValueError(f"{key} 字段无效或过长")
+    if not isinstance(data.get("currency"), str) or len(data["currency"]) > 20:
+        raise ValueError("币种字段无效或过长")
+    for key, allowed in (("materials", {"position": int, "code": 100, "name": 200, "specification": 200, "quantity": 40, "unit": 30, "technical_parameters": 10000, "supply_requirement": 10000, "stock_status": 100, "production_order": 100}), ("outbound_items", {"position": int, "document_number": 100, "flow_number": 100, "material_code": 100, "material_name": 200, "specification": 200, "unit": 30, "quantity": 40, "notes": 10000})):
+        rows = data.get(key)
+        if not isinstance(rows, list) or len(rows) > 500:
+            raise ValueError(f"{key} 条数无效")
+        for index, row in enumerate(rows, 1):
+            if not isinstance(row, dict):
+                raise ValueError(f"{key} 第 {index} 条格式错误")
+            for field, limit in allowed.items():
+                if field not in row:
+                    raise ValueError(f"{key} 缺少 {field} 字段")
+                value = row.get(field)
+                if field == "position":
+                    if type(value) is not int or value != index:
+                        raise ValueError(f"{key} 行号无效")
+                elif value is not None and (not isinstance(value, str) or len(value) > limit):
+                    raise ValueError(f"{key} 的 {field} 字段无效或过长")
+                elif value is None and field != "quantity":
+                    raise ValueError(f"{key} 的 {field} 不能为空")
+    return {"oa_number": number, "contract_number": contract_number.strip(), "sha256": data["sha256"], "customer_contract_number": data["customer_contract_number"], "oa_signer": data["oa_signer"], "customer_name": data["customer_name"], "currency": data["currency"], "items": [], "materials": [{key: row.get(key) for key in {"position", "code", "name", "specification", "quantity", "unit", "technical_parameters", "supply_requirement", "stock_status", "production_order"}} for row in data["materials"]], "outbound_items": [{key: row.get(key) for key in {"position", "document_number", "flow_number", "material_code", "material_name", "specification", "unit", "quantity", "notes"}} for row in data["outbound_items"]]}
+
+
+@login_required
+@require_http_methods(["POST"])
+def desktop_sync(request):
+    if len(request.body) > 1024 * 1024:
+        return JsonResponse({"error": "同步内容超过 1 MB"}, status=413)
+    try:
+        data = _validate_desktop_oa(json.loads(request.body))
+        contract, flows, materials, outbound = save_oa_import(request, data, f"OA桌面同步-{data['oa_number']}", "OA桌面同步")
+        return JsonResponse({"contract_number": contract.contract_number, "flows_added": flows, "materials_added": materials, "outbound_added": outbound, "message": f"合同 {contract.contract_number} 已同步；新增 {flows} 个 OA 流程、{materials} 条物料、{outbound} 条出库记录"})
+    except (ValueError, KeyError, TypeError, IntegrityError) as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
 
 
 @require_http_methods(["GET", "POST"])
@@ -166,7 +232,7 @@ def import_oa_online(request):
     if request.method == "POST":
         run_id = request.POST.get("run_id", "").strip()
         try:
-            html = fetch_oa_html(request.POST.get("oa_username", "").strip(), request.POST.get("oa_password", ""), run_id)
+            html = fetch_oa_html(request.POST.get("oa_username", "").strip(), request.POST.get("oa_password", ""), run_id, settings.OA_BASE_URL)
             try:
                 data = parse_oa(html)
             except ValueError as exc:

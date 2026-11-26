@@ -12,3 +12,6 @@ __pycache__/
 *.sqlite3-wal
 *.sqlite3-shm
 *.log
+build/
+dist/
+*.spec

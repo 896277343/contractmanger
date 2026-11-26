@@ -4,10 +4,12 @@ from django.contrib import admin
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms.models import inlineformset_factory
 from django.test import RequestFactory
+from django.test import Client
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from pathlib import Path
+import json
 from unittest import skipUnless
 from unittest.mock import patch
 from io import BytesIO
@@ -132,7 +134,7 @@ class ImportTests(TestCase):
         self.assertEqual(Contract.objects.count(), 1)
         self.assertEqual(OAFlow.objects.count(), 1)
         self.assertNotIn("temporary-secret", str(dict(self.client.session)))
-        fetch.assert_called_with("my-oa-account", "temporary-secret", "12345")
+        fetch.assert_called_with("my-oa-account", "temporary-secret", "12345", "http://192.168.1.80:8080")
 
     @patch("contracts.views.fetch_oa_html")
     def test_online_oa_cannot_change_another_salesperson_contract(self, fetch):
@@ -156,6 +158,37 @@ class ImportTests(TestCase):
         page = b'<html><head><title>Print</title></head><body><script>var g_run_id = "298175";</script><input type="hidden" title="\xe5\x90\x88\xe5\x90\x8c\xe5\x8f\xb7" value="R26063"></body></html>'
         self.assertEqual(parse_oa(page)["contract_number"], "R26063")
         self.assertIn("页面流水号 298175", describe_oa_page(page))
+
+    def test_desktop_sync_uses_logged_in_owner_and_is_idempotent(self):
+        client = Client(enforce_csrf_checks=True)
+        token = client.get(reverse("desktop_csrf")).json()["csrf_token"]
+        login_response = client.post(reverse("desktop_login"), {"username": "sales", "password": "safe-password-123"}, HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(login_response.status_code, 200)
+        token = login_response.json()["csrf_token"]
+        data = parse_oa(SAMPLE)
+        data["currency"] = "人民币"
+        data["materials"] = [{"position": 1, "code": "15100153", "name": "仪表", "specification": "M-1", "quantity": "1", "unit": "台", "technical_parameters": "", "supply_requirement": "", "stock_status": "", "production_order": ""}]
+        payload = json.dumps(data)
+        self.assertEqual(client.post(reverse("desktop_sync"), data=payload, content_type="application/json").status_code, 403)
+        first = client.post(reverse("desktop_sync"), data=payload, content_type="application/json", HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.json()["materials_added"], 1)
+        self.assertEqual(Contract.objects.get().salesperson, self.user)
+        second = client.post(reverse("desktop_sync"), data=payload, content_type="application/json", HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.json()["materials_added"], 0)
+        self.assertEqual(Material.objects.count(), 1)
+        self.assertEqual(AuditEvent.objects.filter(action="OA桌面同步").count(), 1)
+
+    def test_desktop_sync_does_not_take_over_another_owner_contract(self):
+        other = get_user_model().objects.create_user("other", password="safe-password-123")
+        Contract.objects.create(contract_number="ZY-001", salesperson=other)
+        data = parse_oa(SAMPLE)
+        data["currency"] = "人民币"
+        response = self.client.post(reverse("desktop_sync"), data=json.dumps(data), content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Contract.objects.get().salesperson, other)
+        self.assertEqual(Material.objects.count(), 0)
 
     @patch("contracts.oa_client._get")
     @patch("contracts.oa_client._encrypt_password", return_value="encrypted")

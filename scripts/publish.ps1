@@ -15,7 +15,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "未设置 origin 远程仓库。"
 }
 
-git add -- .gitignore .gitattributes README.md requirements.txt manage.py config contracts templates scripts
+git add -- .gitignore .gitattributes README.md requirements.txt requirements-desktop.txt manage.py desktop_sync.py config contracts templates scripts docs
 if ($LASTEXITCODE -ne 0) { throw "暂存代码失败。" }
 git diff --cached --check
 if ($LASTEXITCODE -ne 0) { throw "提交前检查失败。" }

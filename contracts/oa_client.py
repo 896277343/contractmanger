@@ -7,7 +7,6 @@ from urllib.parse import parse_qs, urlencode, urljoin, urlparse
 from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_opener
 
 from bs4 import BeautifulSoup
-from django.conf import settings
 
 
 LOGIN_KEY = re.compile(r'var\s+(modulus|exponent)\s*=\s*"([0-9A-Fa-f]+)"')
@@ -74,28 +73,47 @@ def _form_frame_url(page, wrapper_url, run_id):
     return frame_url
 
 
-def fetch_oa_html(username, password, run_id):
-    if not re.fullmatch(r"[0-9]{1,12}", run_id):
-        raise ValueError("请输入有效的 OA 流水号")
-    if not username or not password:
-        raise ValueError("请输入 OA 用户名和密码")
-    base = settings.OA_BASE_URL.rstrip("/")
-    opener = build_opener(ProxyHandler({}), HTTPCookieProcessor(http.cookiejar.CookieJar()))
-    try:
+class OAClient:
+    def __init__(self, base_url=None):
+        self.base = (base_url or "http://192.168.1.80:8080").rstrip("/")
+        self.opener = build_opener(ProxyHandler({}), HTTPCookieProcessor(http.cookiejar.CookieJar()))
+        self.logged_in = False
+
+    def login(self, username, password):
+        if not username or not password:
+            raise ValueError("请输入 OA 用户名和密码")
+        base = self.base
+        opener = self.opener
         login_page = _get(opener, base + "/")
         encrypted = _encrypt_password(password, login_page)
         body = urlencode({"UNAME": username, "PASSWORD": encrypted, "encode_type": "1"}).encode("utf-8")
-        login_result = _get(opener, base + "/logincheck.php", body, referer=base + "/")
+        self.login_result = _get(opener, base + "/logincheck.php", body, referer=base + "/")
+        self.logged_in = True
+
+    def fetch(self, run_id):
+        if not re.fullmatch(r"[0-9]{1,12}", run_id):
+            raise ValueError("请输入有效的 OA 流水号")
+        if not self.logged_in:
+            raise ValueError("请先登录 OA")
+        base = self.base
+        opener = self.opener
         query = urlencode({"actionType": "view", "MENU_FLAG": "", "RUN_ID": run_id, "PRCS_KEY_ID": "", "FLOW_ID": "199"})
         wrapper_url = base + "/general/approve_center/list/print/index.php?" + query
         print_page = _get(opener, wrapper_url)
         if "用户未登录" in _visible_text(print_page)[:150]:
-            detail = _visible_text(login_result)[:120]
+            detail = _visible_text(self.login_result)[:120]
             raise ValueError("OA 登录未成功，打印页仍显示“用户未登录”" + (f"；OA 提示：{detail}" if detail else "；请检查账号、密码或验证码"))
         if BeautifulSoup(print_page, "html.parser").find("iframe", id="print_frm"):
             print_page = _get(opener, _form_frame_url(print_page, wrapper_url, run_id), referer=wrapper_url)
             if "用户未登录" in _visible_text(print_page)[:150]:
                 raise ValueError("OA 原始表单显示“用户未登录”，请检查账号或重新登录")
         return print_page
+
+
+def fetch_oa_html(username, password, run_id, base_url=None):
+    client = OAClient(base_url)
+    try:
+        client.login(username, password)
+        return client.fetch(run_id)
     except (TimeoutError, HTTPError, URLError, OSError) as exc:
         raise ValueError("服务器无法连接 OA 内网地址，或 OA 登录失败；请检查服务器到 OA 的网络及账号") from exc
