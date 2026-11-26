@@ -22,7 +22,7 @@ from .currency import conversion
 from .parser import parse_oa
 from .excel_import import flow_numbers, parse_workbook
 from .workflow_import import contract_candidates, parse_workflow_xls
-from .oa_client import fetch_oa_html
+from .oa_client import describe_oa_page, fetch_oa_html
 
 
 SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
@@ -151,6 +151,11 @@ class ImportTests(TestCase):
         with self.assertRaisesMessage(ValueError, "OA 登录未成功"):
             fetch_oa_html("account", "secret", "298175")
         self.assertEqual(get_page.call_count, 3)
+
+    def test_print_page_hidden_contract_number_is_recognized(self):
+        page = b'<html><head><title>Print</title></head><body><script>var g_run_id = "298175";</script><input type="hidden" title="\xe5\x90\x88\xe5\x90\x8c\xe5\x8f\xb7" value="R26063"></body></html>'
+        self.assertEqual(parse_oa(page)["contract_number"], "R26063")
+        self.assertIn("页面流水号 298175", describe_oa_page(page))
 
     def test_zip_with_multiple_html_files_is_rejected(self):
         buffer = BytesIO()

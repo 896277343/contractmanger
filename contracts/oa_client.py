@@ -49,6 +49,14 @@ def _visible_text(page):
     return soup.get_text(" ", strip=True)
 
 
+def describe_oa_page(page):
+    soup = BeautifulSoup(page.decode("utf-8", errors="replace"), "html.parser")
+    title = soup.title.get_text(" ", strip=True) if soup.title else "无标题"
+    titled_inputs = soup.find_all("input", attrs={"title": True})
+    run_match = re.search(r'var\s+g_run_id\s*=\s*["\'](\d+)', page.decode("utf-8", errors="replace"))
+    return f"页面标题“{title[:40]}”、带字段名的输入框 {len(titled_inputs)} 个、页面流水号 {run_match.group(1) if run_match else '未找到'}、页面大小 {len(page)} 字节"
+
+
 def fetch_oa_html(username, password, run_id):
     if not re.fullmatch(r"[0-9]{1,12}", run_id):
         raise ValueError("请输入有效的 OA 流水号")

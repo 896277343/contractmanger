@@ -21,7 +21,7 @@ from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundIt
 from .parser import extract_oa_html, parse_oa
 from .excel_import import parse_workbook
 from .workflow_import import parse_workflow_xls
-from .oa_client import fetch_oa_html
+from .oa_client import describe_oa_page, fetch_oa_html
 from .dashboard_data import build_dashboard
 
 
@@ -170,7 +170,7 @@ def import_oa_online(request):
             try:
                 data = parse_oa(html)
             except ValueError as exc:
-                raise ValueError(f"OA 打印页无法识别合同号：{exc}。请确认流水号对应合同执行任务单；必要时保存该打印页 HTML 供格式核对") from exc
+                raise ValueError(f"OA 在线请求返回的页面无法识别合同号：{describe_oa_page(html)}。请核对 OA 登录状态及该流水号的访问权限") from exc
             if data["oa_number"] and data["oa_number"] != run_id:
                 raise ValueError("OA 页面流水号与输入值不一致，已停止导入")
             data["oa_number"] = run_id
