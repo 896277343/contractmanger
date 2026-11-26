@@ -54,7 +54,9 @@ def describe_oa_page(page):
     title = soup.title.get_text(" ", strip=True) if soup.title else "无标题"
     titled_inputs = soup.find_all("input", attrs={"title": True})
     run_match = re.search(r'var\s+g_run_id\s*=\s*["\'](\d+)', page.decode("utf-8", errors="replace"))
-    return f"页面标题“{title[:40]}”、带字段名的输入框 {len(titled_inputs)} 个、页面流水号 {run_match.group(1) if run_match else '未找到'}、页面大小 {len(page)} 字节"
+    visible = _visible_text(page)
+    excerpt = re.sub(r"\s+", " ", visible)[:180]
+    return f"页面标题“{title[:40]}”、带字段名的输入框 {len(titled_inputs)} 个、页面流水号 {run_match.group(1) if run_match else '未找到'}、页面大小 {len(page)} 字节、页面提示“{excerpt or '无可见文字'}”"
 
 
 def fetch_oa_html(username, password, run_id):
