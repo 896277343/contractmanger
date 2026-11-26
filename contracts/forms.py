@@ -1,8 +1,12 @@
 from django import forms
 from django.utils.html import format_html, format_html_join
-import pycountry
+import json
+from pathlib import Path
 
 from .models import Contract, LineItem, Receipt
+
+
+COUNTRIES = json.loads((Path(__file__).with_name("countries.json")).read_text(encoding="utf-8"))
 
 
 OPTIONS = {
@@ -29,7 +33,7 @@ class CountryCodeInput(forms.TextInput):
     def render(self, name, value, attrs=None, renderer=None):
         attrs = {**(attrs or {}), "list": "country-code-options", "autocomplete": "off", "placeholder": "输入 US、GB、DE 等两位英文代码"}
         widget = super().render(name, value, attrs, renderer)
-        options = format_html_join("", '<option value="{}" label="{}"></option>', ((country.alpha_2, country.name) for country in pycountry.countries))
+        options = format_html_join("", '<option value="{}" label="{}"></option>', COUNTRIES.items())
         return format_html('{}<datalist id="country-code-options">{}</datalist>', widget, options)
 
 
@@ -60,13 +64,13 @@ class ContractAdminForm(forms.ModelForm):
             return value
         if value == self.instance.country:
             return value
-        country = pycountry.countries.get(alpha_2=value.upper()) if len(value) == 2 else pycountry.countries.get(alpha_3=value.upper())
-        if country is None:
-            try:
-                country = pycountry.countries.lookup(value)
-            except LookupError as exc:
-                raise forms.ValidationError("请输入有效的两位国家代码或英文国家名称，例如 US、GB、DE。") from exc
-        return country.alpha_2
+        code = value.upper()
+        if code in COUNTRIES:
+            return code
+        matches = [key for key, name in COUNTRIES.items() if name.casefold() == value.casefold()]
+        if len(matches) != 1:
+            raise forms.ValidationError("请输入有效的两位国家代码或英文国家名称，例如 US、GB、DE。")
+        return matches[0]
 
 
 class LineItemAdminForm(forms.ModelForm):
