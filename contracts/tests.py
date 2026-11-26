@@ -20,6 +20,7 @@ from types import SimpleNamespace
 from openpyxl import load_workbook
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 from .admin import ContractAdmin
+from .forms import ContractAdminForm, LineItemAdminForm, ReceiptAdminForm
 from .currency import conversion
 from .parser import parse_oa
 from .excel_import import flow_numbers, parse_workbook
@@ -31,6 +32,27 @@ SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
 <input type="hidden" title="合同号" value="ZY-001">
 <input type="hidden" title="合同执行任务单智仪V1.0.签订单位" value="Example Ltd">
 <table id="LV_33"><tr><td>序号</td></tr><tr><td>1</td><td>Meter</td><td>M-1</td><td>2</td><td>pcs</td><td></td><td></td><td>人民币</td><td></td></tr></table></body>'''.encode("utf-8")
+
+
+class WorkbookFieldTests(TestCase):
+    def test_workbook_options_and_country_autocomplete(self):
+        form = ContractAdminForm(instance=Contract(country="中国", customer_category="历史类别"))
+        self.assertIn(("历史类别", "历史类别（已有值）"), list(form.fields["customer_category"].choices))
+        self.assertTrue(form.fields["customer_category"].required)
+        self.assertTrue(form.fields["agreed_ship_on"].required)
+        country_input = str(form["country"])
+        self.assertIn('value="US" label="United States"', country_input)
+        self.assertIn('list="country-code-options"', country_input)
+        self.assertIn("泄漏仪表", [value for value, _ in LineItemAdminForm().fields["product_category"].choices])
+        self.assertIn("美元", [value for value, _ in ReceiptAdminForm().fields["currency"].choices])
+
+    def test_country_code_normalizes_to_two_letters(self):
+        form = ContractAdminForm(instance=Contract())
+        form.cleaned_data = {"country": "united states"}
+        self.assertEqual(form.clean_country(), "US")
+        form.cleaned_data = {"country": "ZZ"}
+        with self.assertRaisesMessage(Exception, "请输入有效的两位国家代码"):
+            form.clean_country()
 
 
 class WorkflowImportTests(TestCase):

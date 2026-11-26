@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib import messages
+from .forms import ContractAdminForm, LineItemAdminForm, ReceiptAdminForm
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 
 
@@ -16,6 +17,7 @@ def field_changes(instance, fields, old=None):
 
 class LineInline(admin.TabularInline):
     model = LineItem
+    form = LineItemAdminForm
     extra = 0
 
 
@@ -38,6 +40,7 @@ class ShipmentInline(admin.TabularInline):
 
 class ReceiptInline(admin.TabularInline):
     model = Receipt
+    form = ReceiptAdminForm
     extra = 0
 
 
@@ -61,6 +64,9 @@ class AuditEventInline(admin.TabularInline):
 
 @admin.register(Contract)
 class ContractAdmin(admin.ModelAdmin):
+    form = ContractAdminForm
+    class Media:
+        js = ("contracts/country.js",)
     list_display = ("contract_number", "oa_numbers_display", "customer_name", "salesperson", "signed_on", "currency", "amount", "status")
     list_filter = ("status", "business_type", "currency", "country", "signed_on")
     search_fields = ("contract_number", "oa_number", "oa_flows__number", "customer_name", "salesperson__username")
