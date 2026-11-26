@@ -33,7 +33,12 @@ sudo -u contractapp bash -c 'set -a; . /opt/contractmanger/.env; set +a; cd /opt
 sudo -u contractapp git -C "$APP_DIR" pull --ff-only origin main
 sudo -u contractapp "$UV" pip install --python "$PYTHON" -r "$APP_DIR/requirements.txt" gunicorn
 if ! sudo -u contractapp "$PYTHON" -c 'import xlrd' >/dev/null 2>&1; then
-    sudo -u contractapp "$UV" pip install --python "$PYTHON" 'xlrd>=2.0.2,<3'
+    SITE_PACKAGES="$(sudo -u contractapp "$PYTHON" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+    if [[ "$SITE_PACKAGES" != "$APP_DIR/.venv312/"* ]]; then
+        echo "Python site-packages 路径异常：$SITE_PACKAGES" >&2
+        exit 1
+    fi
+    sudo -u contractapp "$APP_DIR/.venv/bin/pip" install --target "$SITE_PACKAGES" 'xlrd>=2.0.2,<3'
 fi
 sudo -u contractapp "$PYTHON" -c 'import django, openpyxl, bs4, xlrd'
 sudo -u contractapp bash -c 'set -e; set -a; . /opt/contractmanger/.env; set +a; cd /opt/contractmanger; .venv312/bin/python manage.py migrate --noinput; .venv312/bin/python manage.py collectstatic --noinput; .venv312/bin/python manage.py check --deploy'
