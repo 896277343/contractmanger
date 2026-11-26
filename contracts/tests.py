@@ -144,6 +144,14 @@ class ImportTests(TestCase):
         self.assertEqual(Contract.objects.get().salesperson, other)
         self.assertEqual(OAFlow.objects.count(), 0)
 
+    @patch("contracts.oa_client._get")
+    @patch("contracts.oa_client._encrypt_password", return_value="encrypted")
+    def test_online_oa_reports_login_failure_instead_of_contract_format(self, encrypt, get_page):
+        get_page.side_effect = [b"login page", "错误 用户名或密码错误".encode(), "用户未登录，请重新登录".encode()]
+        with self.assertRaisesMessage(ValueError, "OA 登录未成功"):
+            fetch_oa_html("account", "secret", "298175")
+        self.assertEqual(get_page.call_count, 3)
+
     def test_zip_with_multiple_html_files_is_rejected(self):
         buffer = BytesIO()
         with ZipFile(buffer, "w") as archive:

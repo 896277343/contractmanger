@@ -6,6 +6,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_opener
 
+from bs4 import BeautifulSoup
 from django.conf import settings
 
 
@@ -41,6 +42,13 @@ def _encrypt_password(password, page):
     return f"{encrypted:0{size * 2}x}"
 
 
+def _visible_text(page):
+    soup = BeautifulSoup(page.decode("utf-8", errors="replace"), "html.parser")
+    for node in soup(["script", "style"]):
+        node.decompose()
+    return soup.get_text(" ", strip=True)
+
+
 def fetch_oa_html(username, password, run_id):
     if not re.fullmatch(r"[0-9]{1,12}", run_id):
         raise ValueError("请输入有效的 OA 流水号")
@@ -52,8 +60,12 @@ def fetch_oa_html(username, password, run_id):
         login_page = _get(opener, base + "/")
         encrypted = _encrypt_password(password, login_page)
         body = urlencode({"UNAME": username, "PASSWORD": encrypted, "encode_type": "1"}).encode("utf-8")
-        _get(opener, base + "/logincheck.php", body, referer=base + "/")
+        login_result = _get(opener, base + "/logincheck.php", body, referer=base + "/")
         query = urlencode({"actionType": "view", "MENU_FLAG": "", "RUN_ID": run_id, "PRCS_KEY_ID": "", "FLOW_ID": "199"})
-        return _get(opener, base + "/general/approve_center/list/print/index.php?" + query)
+        print_page = _get(opener, base + "/general/approve_center/list/print/index.php?" + query)
+        if "用户未登录" in _visible_text(print_page)[:150]:
+            detail = _visible_text(login_result)[:120]
+            raise ValueError("OA 登录未成功，打印页仍显示“用户未登录”" + (f"；OA 提示：{detail}" if detail else "；请检查账号、密码或验证码"))
+        return print_page
     except (TimeoutError, HTTPError, URLError, OSError) as exc:
         raise ValueError("服务器无法连接 OA 内网地址，或 OA 登录失败；请检查服务器到 OA 的网络及账号") from exc

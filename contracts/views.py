@@ -167,7 +167,10 @@ def import_oa_online(request):
         run_id = request.POST.get("run_id", "").strip()
         try:
             html = fetch_oa_html(request.POST.get("oa_username", "").strip(), request.POST.get("oa_password", ""), run_id)
-            data = parse_oa(html)
+            try:
+                data = parse_oa(html)
+            except ValueError as exc:
+                raise ValueError(f"OA 打印页无法识别合同号：{exc}。请确认流水号对应合同执行任务单；必要时保存该打印页 HTML 供格式核对") from exc
             if data["oa_number"] and data["oa_number"] != run_id:
                 raise ValueError("OA 页面流水号与输入值不一致，已停止导入")
             data["oa_number"] = run_id
