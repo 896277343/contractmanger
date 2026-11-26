@@ -106,12 +106,13 @@ class ImportTests(TestCase):
         self.assertIn("q=ZY-001", response.url)
         contract = Contract.objects.get()
         self.assertEqual(contract.oa_number, "12345")
-        self.assertEqual(contract.items.count(), 0)
+        self.assertEqual(contract.items.count(), 1)
+        self.assertEqual(contract.items.get().product_name, "Meter")
         self.assertIsNone(contract.amount)
         upload()
         self.assertEqual(Contract.objects.count(), 1)
         self.assertEqual(OAFlow.objects.count(), 1)
-        self.assertEqual(contract.items.count(), 0)
+        self.assertEqual(contract.items.count(), 1)
 
     def test_zip_import_reads_html_and_ignores_attachments(self):
         buffer = BytesIO()
@@ -159,6 +160,30 @@ class ImportTests(TestCase):
         self.assertEqual(parse_oa(page)["contract_number"], "R26063")
         self.assertIn("页面流水号 298175", describe_oa_page(page))
 
+    def test_oa_contract_number_alias_start_date_and_line_merge(self):
+        contract = Contract.objects.create(contract_number="ZY-001", salesperson=self.user)
+        first = LineItem.objects.create(contract=contract, position=1, product_name="旧商品", model="OLD", quantity=1, notes="业务备注", product_category="分析仪", supplier="厂家A", purchase_price=Decimal("8"))
+        LineItem.objects.create(contract=contract, position=3, product_name="保留的额外行")
+        html = SAMPLE.replace('title="合同号"'.encode(), 'title="日立信合同号"'.encode()).replace(b'</body>', '<table class="TableList"><tr><td>流程开始（流水号：12345）</td></tr><tr><td>第1步</td><td>序号1：发起人</td><td>开始于：2026-11-05 15:34:20</td></tr></table></body>'.encode())
+        parsed = parse_oa(html)
+        self.assertEqual(parsed["contract_number"], "ZY-001")
+        self.assertEqual(parsed["signed_on"], "2026-11-05")
+        self.client.post(reverse("upload"), {"file": SimpleUploadedFile("oa.html", html)})
+        contract.refresh_from_db()
+        first.refresh_from_db()
+        self.assertEqual(str(contract.signed_on), "2026-11-05")
+        self.assertEqual(first.product_name, "Meter")
+        self.assertEqual(first.model, "M-1")
+        self.assertEqual(first.quantity, Decimal("2"))
+        self.assertEqual(first.notes, "业务备注")
+        self.assertEqual(first.product_category, "分析仪")
+        self.assertEqual(first.supplier, "厂家A")
+        self.assertEqual(first.purchase_price, Decimal("8"))
+        self.assertEqual(contract.items.count(), 2)
+        self.assertEqual(contract.items.get(position=3).product_name, "保留的额外行")
+        self.client.post(reverse("upload"), {"file": SimpleUploadedFile("oa.html", html)})
+        self.assertEqual(contract.items.count(), 2)
+
     def test_desktop_sync_uses_logged_in_owner_and_is_idempotent(self):
         client = Client(enforce_csrf_checks=True)
         token = client.get(reverse("desktop_csrf")).json()["csrf_token"]
@@ -173,11 +198,14 @@ class ImportTests(TestCase):
         first = client.post(reverse("desktop_sync"), data=payload, content_type="application/json", HTTP_X_CSRFTOKEN=token)
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json()["materials_added"], 1)
+        self.assertEqual(first.json()["lines_created"], 1)
         self.assertEqual(Contract.objects.get().salesperson, self.user)
         second = client.post(reverse("desktop_sync"), data=payload, content_type="application/json", HTTP_X_CSRFTOKEN=token)
         self.assertEqual(second.status_code, 200)
         self.assertEqual(second.json()["materials_added"], 0)
+        self.assertEqual(second.json()["lines_updated"], 0)
         self.assertEqual(Material.objects.count(), 1)
+        self.assertEqual(LineItem.objects.count(), 1)
         self.assertEqual(AuditEvent.objects.filter(action="OA桌面同步").count(), 1)
 
     def test_desktop_login_over_https_requires_matching_origin(self):
@@ -266,7 +294,7 @@ class ImportTests(TestCase):
         second = SAMPLE.replace(b"12345", b"67890")
         self.client.post(reverse("upload"), {"file": SimpleUploadedFile("second.html", second)})
         self.assertEqual(Contract.objects.count(), 1)
-        self.assertEqual(Contract.objects.get().items.count(), 0)
+        self.assertEqual(Contract.objects.get().items.count(), 1)
         self.assertEqual(set(OAFlow.objects.values_list("number", flat=True)), {"12345", "67890"})
 
     def test_one_oa_flow_can_cover_multiple_contracts(self):
@@ -318,7 +346,7 @@ class ImportTests(TestCase):
         self.assertNotContains(response, "OTHER-2026")
         self.assertNotContains(response, "法国")
 
-    def test_oa_supplements_materials_without_changing_existing_products(self):
+    def test_oa_supplements_materials_and_existing_product_fields(self):
         contract = Contract.objects.create(contract_number="ZY-001", salesperson=self.user, customer_name="Excel customer")
         LineItem.objects.create(contract=contract, position=1, model="OLD-1", quantity=1)
         oa = SAMPLE.replace(b"</body>", b'<table id="LV_28"><tr><td>header</td></tr><tr><td>1</td><td>MAT-01</td><td>Sensor</td><td>S-1</td><td>2</td><td>pcs</td><td>standard</td><td>buy</td><td>none</td><td>PO-1</td></tr></table></body>')
@@ -328,6 +356,8 @@ class ImportTests(TestCase):
         contract.refresh_from_db()
         self.assertEqual(contract.customer_name, "Excel customer")
         self.assertEqual(contract.items.count(), 1)
+        self.assertEqual(contract.items.get().model, "M-1")
+        self.assertEqual(contract.items.get().quantity, Decimal("2"))
         self.assertEqual(contract.materials.count(), 1)
         self.assertEqual(Material.objects.get().code, "MAT-01")
         self.assertIn("MAT-01", AuditEvent.objects.filter(contract=contract, action="补充OA详情").first().detail)

@@ -67,7 +67,7 @@ class ContractSession:
         return result["username"]
 
     def sync(self, data):
-        fields = ("oa_number", "contract_number", "customer_contract_number", "oa_signer", "customer_name", "currency", "sha256", "materials", "outbound_items")
+        fields = ("oa_number", "contract_number", "customer_contract_number", "oa_signer", "customer_name", "currency", "signed_on", "sha256", "items", "materials", "outbound_items")
         return self.request("api/desktop/sync/", {key: data[key] for key in fields})
 
     def resolve_owner(self, data):
@@ -219,7 +219,9 @@ class SyncApp:
         self.preview = data
         self.sync_button.configure(state="normal" if self.contract else "disabled")
         owner = data["owner_preview"]
-        lines = [f"OA 流水号：{data['oa_number']}", f"合同号：{data['contract_number']}", f"签订单位：{data['customer_name']}", f"合同签订人：{data['oa_signer']}", f"归属业务员：{owner['owner']}（{'已有合同，保持原归属' if owner['existing'] else '按签订人分配'}）", f"供货物料：{len(data['materials'])} 条", f"已发货物料：{len(data['outbound_items'])} 条", "", "供货物料预览："]
+        lines = [f"OA 流水号：{data['oa_number']}", f"合同号：{data['contract_number']}", f"签订日期：{data['signed_on'] or '未找到流程开始时间'}", f"签订单位：{data['customer_name']}", f"合同签订人：{data['oa_signer']}", f"归属业务员：{owner['owner']}（{'已有合同，保持原归属' if owner['existing'] else '按签订人分配'}）", f"合同信息产品：{len(data['items'])} 行", f"供货物料：{len(data['materials'])} 条", f"已发货物料：{len(data['outbound_items'])} 条", "", "合同信息预览："]
+        lines += [f"{item['position']}. {item['product_name']}  {item['model']}  × {item['quantity'] or '-'}  {item['currency']} {item['line_amount'] or '-'}" for item in data["items"][:20]]
+        lines.append("\n供货物料预览：")
         lines += [f"{item['position']}. {item['code']}  {item['name']}  {item['specification']}  × {item['quantity'] or '-'}" for item in data["materials"][:30]]
         if len(data["materials"]) > 30:
             lines.append(f"另有 {len(data['materials']) - 30} 条未在预览中展开")

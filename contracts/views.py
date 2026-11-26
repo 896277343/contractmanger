@@ -1,6 +1,7 @@
 import json
 import hashlib
 from decimal import Decimal, InvalidOperation
+from datetime import date
 from io import BytesIO
 from functools import lru_cache
 from pathlib import Path
@@ -79,13 +80,53 @@ def add_oa_details(contract, data):
     return materials_added, outbound_added
 
 
+def merge_oa_line_items(contract, items, source_sha256):
+    created = updated = 0
+    changes = []
+    existing = {item.position: item for item in contract.items.all()}
+    for row in items:
+        position = row["position"]
+        if position not in existing:
+            item = LineItem(contract=contract, position=position)
+            is_new = True
+        else:
+            item = existing[position]
+            is_new = False
+        changed_fields = []
+        for field in ("product_name", "model", "quantity", "unit", "sale_price", "line_amount", "notes"):
+            raw = row.get(field)
+            if raw is None or str(raw).strip() == "":
+                continue
+            if field in ("quantity", "sale_price", "line_amount"):
+                try:
+                    value = Decimal(str(raw).replace(",", ""))
+                except InvalidOperation as exc:
+                    raise ValueError(f"OA 合同信息第 {position} 行 {field} 不是有效数字") from exc
+            else:
+                value = str(raw).strip()
+            if getattr(item, field) != value:
+                changed_fields.append(f"{field}: {str(getattr(item, field) or '')[:80]} → {str(value)[:80]}")
+                setattr(item, field, value)
+        if not changed_fields:
+            continue
+        item.oa_source_sha256 = source_sha256
+        item.oa_source_position = position
+        item.save()
+        if is_new:
+            created += 1
+        else:
+            updated += 1
+        changes.append(f"第 {position} 行 {'新增' if is_new else '更新'}：{'；'.join(changed_fields)}")
+    return created, updated, changes
+
+
 def oa_import_detail(data, materials_added, outbound_added):
     material_lines = [
         f"编码 {item['code'] or '未填'}，名称 {item['name'] or '未填'}，规格 {item['specification'] or '未填'}，数量 {item['quantity'] or '未填'} {item['unit']}，技术参数 {item['technical_parameters'] or '未填'}，供货需求 {item['supply_requirement'] or '未填'}，库存 {item['stock_status'] or '未填'}，生产订单 {item['production_order'] or '未填'}"
         for item in data["materials"]
     ]
     return (f"OA流水号 {data['oa_number'] or '未找到'}；识别供货物料 {len(data['materials'])} 条，本次新增 {materials_added} 条；"
-            f"物料内容：{'；'.join(material_lines) or '无'}；识别已发货物料 {len(data['outbound_items'])} 条，本次新增 {outbound_added} 条；Line items 未变更")
+            f"物料内容：{'；'.join(material_lines) or '无'}；识别已发货物料 {len(data['outbound_items'])} 条，本次新增 {outbound_added} 条")
 
 
 def resolve_oa_owner(user, contract_number, signer):
@@ -112,14 +153,21 @@ def save_oa_import(request, data, filename, source):
         if contract:
             added = attach_flows(contract, [data["oa_number"]], source)
             materials_added, outbound_added = add_oa_details(contract, data)
-            AuditEvent.objects.create(contract=contract, actor=request.user, action="补充OA详情", detail=oa_import_detail(data, materials_added, outbound_added))
+            date_note = ""
+            if not contract.signed_on and data.get("signed_on"):
+                contract.signed_on = date.fromisoformat(data["signed_on"])
+                contract.save(update_fields=["signed_on", "updated_at"])
+                date_note = f"；签订日期补充为 {contract.signed_on}"
+            lines_created, lines_updated, line_changes = merge_oa_line_items(contract, data["items"], data["sha256"])
+            AuditEvent.objects.create(contract=contract, actor=request.user, action="补充OA详情", detail=oa_import_detail(data, materials_added, outbound_added) + date_note + f"；Line items 新增 {lines_created} 行、更新 {lines_updated} 行；" + "；".join(line_changes))
         else:
-            contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=owner, customer_name=data["customer_name"], currency=data.get("currency") or (data["items"][0]["currency"] if data["items"] else ""), source_filename=filename[:255], source_sha256=data["sha256"])
+            contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=owner, customer_name=data["customer_name"], currency=data.get("currency") or (data["items"][0]["currency"] if data["items"] else ""), signed_on=date.fromisoformat(data["signed_on"]) if data.get("signed_on") else None, source_filename=filename[:255], source_sha256=data["sha256"])
             attach_flows(contract, [data["oa_number"]], source)
             materials_added, outbound_added = add_oa_details(contract, data)
-            AuditEvent.objects.create(contract=contract, actor=request.user, action=source, detail=oa_import_detail(data, materials_added, outbound_added))
+            lines_created, lines_updated, line_changes = merge_oa_line_items(contract, data["items"], data["sha256"])
+            AuditEvent.objects.create(contract=contract, actor=request.user, action=source, detail=oa_import_detail(data, materials_added, outbound_added) + f"；签订日期 {contract.signed_on or '未找到'}；Line items 新增 {lines_created} 行、更新 {lines_updated} 行；" + "；".join(line_changes))
             added = 1
-    return contract, added, materials_added, outbound_added
+    return contract, added, materials_added, outbound_added, lines_created, lines_updated
 
 
 @require_http_methods(["GET"])
@@ -153,8 +201,16 @@ def _validate_desktop_oa(data):
             raise ValueError(f"{key} 字段无效或过长")
     if not isinstance(data.get("currency"), str) or len(data["currency"]) > 20:
         raise ValueError("币种字段无效或过长")
-    for key, allowed in (("materials", {"position": int, "code": 100, "name": 200, "specification": 200, "quantity": 40, "unit": 30, "technical_parameters": 10000, "supply_requirement": 10000, "stock_status": 100, "production_order": 100}), ("outbound_items", {"position": int, "document_number": 100, "flow_number": 100, "material_code": 100, "material_name": 200, "specification": 200, "unit": 30, "quantity": 40, "notes": 10000})):
-        rows = data.get(key)
+    signed_on = data.get("signed_on")
+    if signed_on is not None:
+        if not isinstance(signed_on, str) or len(signed_on) != 10:
+            raise ValueError("OA 流程开始日期无效")
+        try:
+            date.fromisoformat(signed_on)
+        except ValueError as exc:
+            raise ValueError("OA 流程开始日期无效") from exc
+    for key, allowed in (("items", {"position": int, "product_name": 200, "model": 200, "quantity": 40, "unit": 30, "sale_price": 40, "line_amount": 40, "currency": 20, "notes": 10000}), ("materials", {"position": int, "code": 100, "name": 200, "specification": 200, "quantity": 40, "unit": 30, "technical_parameters": 10000, "supply_requirement": 10000, "stock_status": 100, "production_order": 100}), ("outbound_items", {"position": int, "document_number": 100, "flow_number": 100, "material_code": 100, "material_name": 200, "specification": 200, "unit": 30, "quantity": 40, "notes": 10000})):
+        rows = data.get(key, [] if key == "items" else None)
         if not isinstance(rows, list) or len(rows) > 500:
             raise ValueError(f"{key} 条数无效")
         for index, row in enumerate(rows, 1):
@@ -169,9 +225,9 @@ def _validate_desktop_oa(data):
                         raise ValueError(f"{key} 行号无效")
                 elif value is not None and (not isinstance(value, str) or len(value) > limit):
                     raise ValueError(f"{key} 的 {field} 字段无效或过长")
-                elif value is None and field != "quantity":
+                elif value is None and field not in ("quantity", "sale_price", "line_amount"):
                     raise ValueError(f"{key} 的 {field} 不能为空")
-    return {"oa_number": number, "contract_number": contract_number.strip(), "sha256": data["sha256"], "customer_contract_number": data["customer_contract_number"], "oa_signer": data["oa_signer"], "customer_name": data["customer_name"], "currency": data["currency"], "items": [], "materials": [{key: row.get(key) for key in {"position", "code", "name", "specification", "quantity", "unit", "technical_parameters", "supply_requirement", "stock_status", "production_order"}} for row in data["materials"]], "outbound_items": [{key: row.get(key) for key in {"position", "document_number", "flow_number", "material_code", "material_name", "specification", "unit", "quantity", "notes"}} for row in data["outbound_items"]]}
+    return {"oa_number": number, "contract_number": contract_number.strip(), "sha256": data["sha256"], "customer_contract_number": data["customer_contract_number"], "oa_signer": data["oa_signer"], "customer_name": data["customer_name"], "currency": data["currency"], "signed_on": signed_on, "items": [{field: row.get(field) for field in ("position", "product_name", "model", "quantity", "unit", "sale_price", "line_amount", "currency", "notes")} for row in data.get("items", [])], "materials": [{key: row.get(key) for key in {"position", "code", "name", "specification", "quantity", "unit", "technical_parameters", "supply_requirement", "stock_status", "production_order"}} for row in data["materials"]], "outbound_items": [{key: row.get(key) for key in {"position", "document_number", "flow_number", "material_code", "material_name", "specification", "unit", "quantity", "notes"}} for row in data["outbound_items"]]}
 
 
 @login_required
@@ -181,8 +237,8 @@ def desktop_sync(request):
         return JsonResponse({"error": "同步内容超过 1 MB"}, status=413)
     try:
         data = _validate_desktop_oa(json.loads(request.body))
-        contract, flows, materials, outbound = save_oa_import(request, data, f"OA桌面同步-{data['oa_number']}", "OA桌面同步")
-        return JsonResponse({"contract_number": contract.contract_number, "flows_added": flows, "materials_added": materials, "outbound_added": outbound, "message": f"合同 {contract.contract_number} 已同步；新增 {flows} 个 OA 流程、{materials} 条物料、{outbound} 条出库记录"})
+        contract, flows, materials, outbound, lines_created, lines_updated = save_oa_import(request, data, f"OA桌面同步-{data['oa_number']}", "OA桌面同步")
+        return JsonResponse({"contract_number": contract.contract_number, "flows_added": flows, "materials_added": materials, "outbound_added": outbound, "lines_created": lines_created, "lines_updated": lines_updated, "message": f"合同 {contract.contract_number} 已同步；新增 {flows} 个 OA 流程、{materials} 条物料、{outbound} 条出库记录；Line items 新增 {lines_created} 行、更新 {lines_updated} 行"})
     except (ValueError, KeyError, TypeError, IntegrityError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
@@ -249,8 +305,8 @@ def upload(request):
             return redirect("upload")
         try:
             data = parse_oa(extract_oa_html(file.read(), file.name))
-            contract, added, materials_added, outbound_added = save_oa_import(request, data, file.name, "OA导入")
-            messages.success(request, f"合同 {contract.contract_number} 已保存，新增 {added} 个 OA 流程、{materials_added} 条物料、{outbound_added} 条出库记录；Line items 未变更")
+            contract, added, materials_added, outbound_added, lines_created, lines_updated = save_oa_import(request, data, file.name, "OA导入")
+            messages.success(request, f"合同 {contract.contract_number} 已保存，新增 {added} 个 OA 流程、{materials_added} 条物料、{outbound_added} 条出库记录；Line items 新增 {lines_created} 行、更新 {lines_updated} 行")
             return redirect(reverse("dashboard") + "?" + urlencode({"q": contract.contract_number}))
         except (ValueError, IntegrityError) as exc:
             messages.error(request, str(exc))
@@ -272,8 +328,8 @@ def import_oa_online(request):
             if data["oa_number"] and data["oa_number"] != run_id:
                 raise ValueError("OA 页面流水号与输入值不一致，已停止导入")
             data["oa_number"] = run_id
-            contract, added, materials_added, outbound_added = save_oa_import(request, data, f"OA在线流水号-{run_id}", "OA在线导入")
-            messages.success(request, f"合同 {contract.contract_number} 已保存，新增 {added} 个 OA 流程、{materials_added} 条物料、{outbound_added} 条出库记录；Line items 未变更")
+            contract, added, materials_added, outbound_added, lines_created, lines_updated = save_oa_import(request, data, f"OA在线流水号-{run_id}", "OA在线导入")
+            messages.success(request, f"合同 {contract.contract_number} 已保存，新增 {added} 个 OA 流程、{materials_added} 条物料、{outbound_added} 条出库记录；Line items 新增 {lines_created} 行、更新 {lines_updated} 行")
             return redirect(reverse("dashboard") + "?" + urlencode({"q": contract.contract_number}))
         except (ValueError, IntegrityError) as exc:
             messages.error(request, str(exc))

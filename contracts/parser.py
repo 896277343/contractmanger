@@ -54,7 +54,20 @@ def parse_oa(content: bytes):
         return ""
     contract_number = find("日立信合同号", "合同号")
     if not contract_number:
-        raise ValueError("没有找到日立信合同号，请确认 OA 导出格式")
+        raise ValueError("没有找到日立信合同号或合同号，请确认 OA 导出格式")
+    signed_on = None
+    for table in soup.find_all("table"):
+        if "流程开始" not in table.get_text(" ", strip=True)[:100]:
+            continue
+        for row in table.find_all("tr"):
+            row_text = row.get_text(" ", strip=True)
+            if re.search(r"第\s*1\s*步", row_text) and "发起人" in row_text:
+                started = re.search(r"开始于\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s+\d{2}:\d{2}:\d{2}", row_text)
+                if started:
+                    signed_on = started.group(1)
+                    break
+        if signed_on:
+            break
     items = []
     table = soup.find("table", id="LV_33")
     if table:
@@ -76,4 +89,4 @@ def parse_oa(content: bytes):
             cells = [c.get_text(" ", strip=True) for c in row.find_all("td", recursive=False)]
             if len(cells) >= 8 and any(cells[1:6]):
                 outbound_items.append({"position": len(outbound_items) + 1, "document_number": cells[1], "flow_number": cells[2], "material_code": cells[3], "material_name": cells[4], "specification": cells[5], "unit": cells[6], "quantity": cells[7] or None, "notes": cells[8] if len(cells) > 8 else ""})
-    return {"oa_number": oa_number, "contract_number": contract_number, "customer_contract_number": find("甲方合同号"), "oa_signer": find("合同签订人") or find("发起人"), "customer_name": find("签订单位", "合同执行任务单智仪V1.0.签订单位"), "oa_product_type": find("产品类型"), "items": items, "materials": materials, "outbound_items": outbound_items, "sha256": hashlib.sha256(content).hexdigest()}
+    return {"oa_number": oa_number, "contract_number": contract_number, "customer_contract_number": find("甲方合同号"), "oa_signer": find("合同签订人") or find("发起人"), "customer_name": find("签订单位", "合同执行任务单智仪V1.0.签订单位"), "oa_product_type": find("产品类型"), "signed_on": signed_on, "items": items, "materials": materials, "outbound_items": outbound_items, "sha256": hashlib.sha256(content).hexdigest()}
