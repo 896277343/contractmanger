@@ -19,6 +19,7 @@ from django.views.decorators.http import require_http_methods
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 from .parser import extract_oa_html, parse_oa
 from .excel_import import parse_workbook
+from .workflow_import import parse_workflow_xls
 from .dashboard_data import build_dashboard
 
 
@@ -104,6 +105,7 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     context = build_dashboard(request.user, request.GET)
+    context["can_import"] = request.user.is_superuser or request.user.groups.filter(name="信息处理员").exists()
     context["dashboard_asset_version"] = dashboard_asset_version()
     context["export_url"] = reverse("export") + ("?" + request.GET.urlencode() if request.GET else "")
     return render(request, "contracts/dashboard.html", context)
@@ -219,6 +221,77 @@ def import_excel(request):
     preview = request.session.get("excel_preview")
     existing = set(Contract.objects.filter(contract_number__in=[c["number"] for c in preview["contracts"]]).values_list("contract_number", flat=True)) if preview else set()
     return render(request, "contracts/import_excel.html", {"users": users, "preview": preview, "existing": existing})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def import_workflows(request):
+    if not (request.user.is_superuser or request.user.groups.filter(name="信息处理员").exists()):
+        return HttpResponseForbidden()
+    users = list(get_user_model().objects.filter(is_active=True, is_superuser=False, groups__name="业务员").distinct().order_by("username"))
+    preview = request.session.get("workflow_preview")
+    if request.method == "POST" and request.POST.get("stage") == "preview":
+        request.session.pop("workflow_preview", None)
+        file = request.FILES.get("file")
+        if not file or not file.name.lower().endswith(".xls") or file.size > 10 * 1024 * 1024:
+            messages.error(request, "请选择不超过 10 MB 的 OA 工作流 XLS 文件")
+            return redirect("import_workflows")
+        try:
+            preview = parse_workflow_xls(file.read())
+            preview["source_name"] = file.name[:255]
+            request.session["workflow_preview"] = preview
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect("import_workflows")
+    if request.method == "POST" and request.POST.get("stage") == "confirm":
+        if not preview or request.POST.get("confirmed") != "yes":
+            messages.error(request, "请先预览并确认导入")
+            return redirect("import_workflows")
+        owner_map = {}
+        valid_users = {str(person.pk): person for person in users}
+        for index, name in enumerate(preview["initiators"]):
+            owner_map[name] = valid_users.get(request.POST.get(f"owner_{index}", ""))
+        created = added = unchanged = skipped = conflicts = 0
+        with transaction.atomic():
+            for row in preview["rows"]:
+                owner = owner_map.get(row["initiator"])
+                if not owner or len(row["contracts"]) != 1 or not row["oa_number"].isdigit() or len(row["oa_number"]) > 40:
+                    skipped += 1
+                    continue
+                number = row["contracts"][0]
+                contract = Contract.objects.filter(contract_number__iexact=number).first()
+                if contract and contract.salesperson_id != owner.pk:
+                    conflicts += 1
+                    continue
+                was_created = contract is None
+                if contract is None:
+                    contract = Contract.objects.create(contract_number=number, oa_number=row["oa_number"], oa_signer=row["initiator"], salesperson=owner, source_filename=preview["source_name"])
+                    created += 1
+                flow_added = attach_flows(contract, [row["oa_number"]], "工作流XLS")
+                added += flow_added
+                if was_created or flow_added:
+                    AuditEvent.objects.create(contract=contract, actor=request.user, action="工作流XLS导入", detail=f"第 {row['line']} 行；发起人 {row['initiator']}；OA流水号 {row['oa_number']}；合同号 {number}")
+                else:
+                    unchanged += 1
+        del request.session["workflow_preview"]
+        messages.success(request, f"工作流导入完成：新建 {created} 份合同，新增 {added} 个 OA 流程；重复 {unchanged} 行，归属冲突 {conflicts} 行，无法确定合同号或账号 {skipped} 行。合同金额、产品和物料未变更。")
+        return redirect("import_workflows")
+    preview = request.session.get("workflow_preview")
+    if preview:
+        existing = {c.contract_number.upper(): c for c in Contract.objects.filter(contract_number__in=[row["contracts"][0] for row in preview["rows"] if len(row["contracts"]) == 1]).select_related("salesperson")}
+        initiators = []
+        for name in preview["initiators"]:
+            normalized_name = "".join(name.split())
+            matches = [person for person in users if name == person.username or normalized_name == "".join(person.get_full_name().split())]
+            initiators.append({"name": name, "default_id": matches[0].pk if len(matches) == 1 else None})
+        display_rows = []
+        for row in preview["rows"]:
+            item = dict(row)
+            item["existing_owner"] = existing[row["contracts"][0]].salesperson.get_full_name() or existing[row["contracts"][0]].salesperson.username if len(row["contracts"]) == 1 and row["contracts"][0] in existing else ""
+            display_rows.append(item)
+    else:
+        initiators = display_rows = []
+    return render(request, "contracts/import_workflows.html", {"users": users, "preview": preview, "initiators": initiators, "display_rows": display_rows})
 
 
 HEADERS = ["序号", "OA流水号", "合同签订日期", "业务类型", "合同编号", "业务员", "客户公司名称", "客户类别", "询盘来源", "产品类别", "产品类别二级", "产品型号", "购入厂家", "购入价格（人民币）", "数量", "人民币/美元/欧元（R/M/U）", "销售单价(原币)", "运费(原币)", "合同金额(原币)", "国家/地区", "行业", "开票日期", "发票类型", "购入是否开票", "销售是否开票", "合订签订发货日期", "实际发货日期", "物流及单号", "收款方式", "收款日期", "收款币种（R/M/U）", "收款金额(原币)", "结算汇率", "执行进度", "执行详情", "是否报关", "邮箱", "备注"]

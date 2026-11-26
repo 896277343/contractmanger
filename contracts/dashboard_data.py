@@ -53,7 +53,7 @@ def build_dashboard(user, params):
     privileged = user.is_superuser or user.groups.filter(name__in=["领导", "信息处理员"]).exists()
     base = Contract.objects.all() if privileged else Contract.objects.filter(salesperson=user)
     salesperson_ids = list(base.order_by().values_list("salesperson_id", flat=True).distinct()) if privileged else []
-    people = get_user_model().objects.filter(Q(pk__in=salesperson_ids) | Q(groups__name="业务员"), is_active=True).distinct().order_by("last_name", "first_name", "username") if privileged else []
+    people = get_user_model().objects.filter(Q(groups__name="业务员") | Q(pk__in=salesperson_ids, is_staff=False), is_active=True, is_superuser=False).distinct().order_by("last_name", "first_name", "username") if privileged else []
     salespeople = [{"scope": f"salesperson:{person.pk}", "name": person.get_full_name() or person.username} for person in people]
     allowed_salesperson_ids = {int(person["scope"].partition(":")[2]) for person in salespeople}
     base = base.select_related("salesperson").prefetch_related("items", "receipts", "shipments", "oa_flows")

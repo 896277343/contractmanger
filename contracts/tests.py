@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from pathlib import Path
 from unittest import skipUnless
+from unittest.mock import patch
 from io import BytesIO
 from zipfile import ZipFile
 from decimal import Decimal
@@ -20,12 +21,74 @@ from .admin import ContractAdmin
 from .currency import conversion
 from .parser import parse_oa
 from .excel_import import flow_numbers, parse_workbook
+from .workflow_import import contract_candidates, parse_workflow_xls
 
 
 SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
 <input type="hidden" title="合同号" value="ZY-001">
 <input type="hidden" title="合同执行任务单智仪V1.0.签订单位" value="Example Ltd">
 <table id="LV_33"><tr><td>序号</td></tr><tr><td>1</td><td>Meter</td><td>M-1</td><td>2</td><td>pcs</td><td></td><td></td><td>人民币</td><td></td></tr></table></body>'''.encode("utf-8")
+
+
+class WorkflowImportTests(TestCase):
+    def setUp(self):
+        self.admin = get_user_model().objects.create_superuser("administrator", password="safe-password-123")
+        self.owner = get_user_model().objects.create_user("sales-one", password="safe-password-123", first_name="张", last_name="三")
+        self.other = get_user_model().objects.create_user("sales-two", password="safe-password-123", first_name="李", last_name="四")
+        group = Group.objects.get(name="业务员")
+        self.owner.groups.add(group)
+        self.other.groups.add(group)
+        self.client.force_login(self.admin)
+
+    def test_contract_candidates_reject_multiple_distinct_numbers(self):
+        self.assertEqual(contract_candidates("OA 299945 合同 ZY-F04-261113-031 (印度)"), ["ZY-F04-261113-031"])
+        self.assertEqual(contract_candidates("甲方F11-260525-01 乙方F11-260525-01"), ["F11-260525-01"])
+        self.assertEqual(len(contract_candidates("R26054, R26055")), 2)
+
+    def test_preview_confirm_and_repeat_keep_one_contract_per_number(self):
+        rows = [
+            {"line": 2, "oa_number": "299945", "title": "合同 F11-260525-01", "initiator": "张三", "contracts": ["F11-260525-01"]},
+            {"line": 3, "oa_number": "299946", "title": "加单 F11-260525-01", "initiator": "张三", "contracts": ["F11-260525-01"]},
+            {"line": 4, "oa_number": "299947", "title": "R26054, R26055", "initiator": "张三", "contracts": ["R26054", "R26055"]},
+        ]
+        parsed = {"sheet": "工作流工作查询", "rows": rows, "initiators": ["张三"]}
+        upload = {"stage": "preview", "file": SimpleUploadedFile("workflows.xls", b"data")}
+        with patch("contracts.views.parse_workflow_xls", return_value=parsed):
+            response = self.client.post(reverse("import_workflows"), upload)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["initiators"][0]["default_id"], self.owner.pk)
+        response = self.client.post(reverse("import_workflows"), {"stage": "confirm", "owner_0": str(self.owner.pk), "confirmed": "yes"})
+        self.assertEqual(response.status_code, 302)
+        contract = Contract.objects.get(contract_number="F11-260525-01")
+        self.assertEqual(contract.salesperson, self.owner)
+        self.assertEqual(contract.oa_flows.count(), 2)
+        self.assertIsNone(contract.amount)
+        self.assertEqual(contract.items.count(), 0)
+        with patch("contracts.views.parse_workflow_xls", return_value=parsed):
+            self.client.post(reverse("import_workflows"), {"stage": "preview", "file": SimpleUploadedFile("workflows.xls", b"data")})
+        self.client.post(reverse("import_workflows"), {"stage": "confirm", "owner_0": str(self.owner.pk), "confirmed": "yes"})
+        self.assertEqual(Contract.objects.count(), 1)
+        self.assertEqual(OAFlow.objects.count(), 2)
+
+    def test_existing_owner_conflict_is_not_reassigned(self):
+        Contract.objects.create(contract_number="F11-260525-01", salesperson=self.other)
+        parsed = {"sheet": "工作流", "initiators": ["张三"], "rows": [{"line": 2, "oa_number": "299945", "title": "F11-260525-01", "initiator": "张三", "contracts": ["F11-260525-01"]}]}
+        with patch("contracts.views.parse_workflow_xls", return_value=parsed):
+            self.client.post(reverse("import_workflows"), {"stage": "preview", "file": SimpleUploadedFile("workflows.xls", b"data")})
+        self.client.post(reverse("import_workflows"), {"stage": "confirm", "owner_0": str(self.owner.pk), "confirmed": "yes"})
+        self.assertEqual(Contract.objects.get().salesperson, self.other)
+        self.assertEqual(OAFlow.objects.count(), 0)
+
+    def test_salesperson_cannot_open_batch_import(self):
+        self.client.force_login(self.owner)
+        self.assertEqual(self.client.get(reverse("import_workflows")).status_code, 403)
+
+    def test_admin_is_not_listed_as_salesperson_filter(self):
+        Contract.objects.create(contract_number="ADMIN-1", salesperson=self.admin)
+        Contract.objects.create(contract_number="SALES-1", salesperson=self.owner)
+        response = self.client.get(reverse("dashboard"))
+        self.assertNotIn(f"salesperson:{self.admin.pk}", [person["scope"] for person in response.context["salespeople"]])
+        self.assertIn(f"salesperson:{self.owner.pk}", [person["scope"] for person in response.context["salespeople"]])
 
 
 class ImportTests(TestCase):
