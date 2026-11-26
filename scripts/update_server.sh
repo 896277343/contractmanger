@@ -32,7 +32,11 @@ install -d -o contractapp -g contractapp -m 700 "$BACKUP_DIR"
 sudo -u contractapp bash -c 'set -a; . /opt/contractmanger/.env; set +a; cd /opt/contractmanger; .venv312/bin/python scripts/backup_sqlite.py /opt/contractmanger-backups'
 sudo -u contractapp git -C "$APP_DIR" pull --ff-only origin main
 sudo -u contractapp "$UV" pip install --python "$PYTHON" -r "$APP_DIR/requirements.txt" gunicorn
-sudo -u contractapp bash -c 'set -a; . /opt/contractmanger/.env; set +a; cd /opt/contractmanger; .venv312/bin/python manage.py migrate --noinput; .venv312/bin/python manage.py collectstatic --noinput; .venv312/bin/python manage.py check --deploy'
+if ! sudo -u contractapp "$PYTHON" -c 'import xlrd' >/dev/null 2>&1; then
+    sudo -u contractapp "$UV" pip install --python "$PYTHON" 'xlrd>=2.0.2,<3'
+fi
+sudo -u contractapp "$PYTHON" -c 'import django, openpyxl, bs4, xlrd'
+sudo -u contractapp bash -c 'set -e; set -a; . /opt/contractmanger/.env; set +a; cd /opt/contractmanger; .venv312/bin/python manage.py migrate --noinput; .venv312/bin/python manage.py collectstatic --noinput; .venv312/bin/python manage.py check --deploy'
 systemctl restart "$SERVICE"
 systemctl is-active --quiet "$SERVICE"
 echo "代码更新完成，服务运行中；数据库备份位于 $BACKUP_DIR。"

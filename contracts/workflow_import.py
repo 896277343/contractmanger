@@ -2,7 +2,6 @@
 from io import StringIO
 import re
 
-import xlrd
 
 
 CONTRACT_PATTERN = re.compile(
@@ -17,6 +16,10 @@ def contract_candidates(title):
 
 
 def parse_workflow_xls(content):
+    try:
+        import xlrd
+    except ImportError as exc:
+        raise ValueError("服务器缺少 xlrd 依赖，请管理员重新运行更新脚本") from exc
     if len(content) > 10 * 1024 * 1024 or not content.startswith(b"\xd0\xcf\x11\xe0"):
         raise ValueError("请选择不超过 10 MB 的 OA 工作流 XLS 文件")
     try:
