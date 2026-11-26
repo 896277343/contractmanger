@@ -47,7 +47,7 @@ class ContractSession:
             try:
                 detail = json.loads(raw)["error"]
             except (ValueError, KeyError, TypeError):
-                detail = f"服务器返回 HTTP {exc.code}"
+                detail = "VPS 尚未更新桌面同步接口，请先运行服务器更新脚本" if exc.code == 404 else f"服务器返回 HTTP {exc.code}"
             raise ValueError(detail) from exc
         except (URLError, TimeoutError, OSError) as exc:
             raise ValueError("无法连接合同系统，请检查网络和 HTTPS 证书") from exc
@@ -122,7 +122,8 @@ class SyncApp:
             try:
                 result = action()
             except Exception as exc:
-                self.root.after(0, lambda: self._done_error(str(exc)))
+                detail = str(exc)
+                self.root.after(0, lambda: self._done_error(detail))
             else:
                 self.root.after(0, lambda: self._done_success(complete, result))
 
