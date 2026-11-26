@@ -154,6 +154,12 @@ def save_oa_import(request, data, filename, source):
             added = attach_flows(contract, [data["oa_number"]], source)
             materials_added, outbound_added = add_oa_details(contract, data)
             date_note = ""
+            customer_name = data["customer_name"].strip()
+            if customer_name and customer_name != contract.customer_name:
+                previous_name = contract.customer_name
+                contract.customer_name = customer_name
+                contract.save(update_fields=["customer_name", "updated_at"])
+                date_note += f"；客户公司名称 {previous_name or '未填写'} → {customer_name}"
             if not contract.signed_on and data.get("signed_on"):
                 contract.signed_on = date.fromisoformat(data["signed_on"])
                 contract.save(update_fields=["signed_on", "updated_at"])

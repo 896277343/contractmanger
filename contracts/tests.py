@@ -383,7 +383,7 @@ class ImportTests(TestCase):
             return self.client.post(reverse("upload"), {"file": SimpleUploadedFile("oa.html", oa)})
         upload()
         contract.refresh_from_db()
-        self.assertEqual(contract.customer_name, "Excel customer")
+        self.assertEqual(contract.customer_name, "Example Ltd")
         self.assertEqual(contract.items.count(), 1)
         self.assertEqual(contract.items.get().model, "M-1")
         self.assertEqual(contract.items.get().quantity, Decimal("2"))
@@ -397,6 +397,13 @@ class ImportTests(TestCase):
         self.assertIn("识别供货物料 1 条，本次新增 0 条", repeat_log)
         self.assertIn("编码 MAT-01", repeat_log)
         self.assertIn("规格 S-1", repeat_log)
+
+    def test_oa_blank_signing_company_preserves_existing_customer(self):
+        contract = Contract.objects.create(contract_number="ZY-001", salesperson=self.user, customer_name="Excel customer")
+        oa = SAMPLE.replace(b"Example Ltd", b"")
+        self.client.post(reverse("upload"), {"file": SimpleUploadedFile("oa.html", oa)})
+        contract.refresh_from_db()
+        self.assertEqual(contract.customer_name, "Excel customer")
 
 
 class UpdateLogTests(TestCase):
