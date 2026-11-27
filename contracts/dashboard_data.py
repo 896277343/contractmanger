@@ -104,7 +104,7 @@ def build_dashboard(user, params):
         elif metric == "shipped":
             entries.extend((c, s.shipped_on, normalized_currency(c.currency) or "未填币种", s.amount, None) for s in c.shipments.all())
         else:
-            entries.extend((c, r.received_on, normalized_currency(r.currency) or "未填币种", r.amount, r) for r in c.receipts.all())
+            entries.extend((c, r.received_on, normalized_currency(r.currency), r.amount, r) for r in c.receipts.all() if r.received_on and r.currency and r.amount is not None)
     if year != "all":
         entries = [e for e in entries if e[1].year == int(year)]
     if start:
@@ -164,7 +164,7 @@ def build_dashboard(user, params):
     currency_cards = []
     for cur in sorted(counts, key=lambda x: totals[x], reverse=True):
         cur_contracts = [c for c in selected if normalized_currency(c.currency) == cur]
-        received = sum((r.amount for c in cur_contracts for r in c.receipts.all() if normalized_currency(r.currency) == cur), Decimal())
+        received = sum((r.amount for c in cur_contracts for r in c.receipts.all() if r.received_on and r.amount is not None and normalized_currency(r.currency) == cur), Decimal())
         signed_total = sum((c.amount for c in cur_contracts if c.amount is not None), Decimal())
         rated_contracts = [(c, paid_fraction(c.progress)) for c in cur_contracts if c.amount is not None]
         rated_total = sum((c.amount for c, fraction in rated_contracts if fraction is not None), Decimal())
@@ -186,6 +186,8 @@ def build_dashboard(user, params):
             same_count = 0
             cross_lines = []
             for receipt in c.receipts.all():
+                if not receipt.received_on or not receipt.currency or receipt.amount is None:
+                    continue
                 receipt_currency = normalized_currency(receipt.currency)
                 if receipt_currency != contract_currency:
                     cross_currency_receipts += 1

@@ -139,9 +139,9 @@ class Shipment(models.Model):
 
 class Receipt(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="receipts")
-    received_on = models.DateField("收款日期")
-    currency = models.CharField("收款币种", max_length=20)
-    amount = models.DecimalField("收款金额(原币)", max_digits=18, decimal_places=2)
+    received_on = models.DateField("收款日期", null=True, blank=True)
+    currency = models.CharField("收款币种", max_length=20, blank=True)
+    amount = models.DecimalField("收款金额(原币)", max_digits=18, decimal_places=2, null=True, blank=True)
     exchange_rate = models.DecimalField("结算汇率", max_digits=18, decimal_places=6, null=True, blank=True)
     notes = models.TextField(blank=True)
 

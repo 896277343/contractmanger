@@ -130,4 +130,4 @@ class ReceiptAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["currency"] = choice_field(Receipt._meta.get_field("currency"), OPTIONS["currency"], getattr(self.instance, "currency", ""))
-        self.fields["currency"].required = True
+        self.fields["currency"].required = False

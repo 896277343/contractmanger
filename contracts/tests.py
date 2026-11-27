@@ -37,6 +37,11 @@ SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
 
 
 class WorkbookFieldTests(TestCase):
+    def test_receipt_fields_are_optional(self):
+        form = ReceiptAdminForm()
+        for name in ("received_on", "currency", "amount", "exchange_rate", "notes"):
+            self.assertFalse(form.fields[name].required, name)
+
     def test_contract_save_needs_no_review(self):
         self.assertNotIn("status", ContractAdminForm().fields)
         self.assertIsNone(ContractAdmin.actions)
