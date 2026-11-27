@@ -37,6 +37,10 @@ SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
 
 
 class WorkbookFieldTests(TestCase):
+    def test_contract_save_needs_no_review(self):
+        self.assertNotIn("status", ContractAdminForm().fields)
+        self.assertIsNone(ContractAdmin.actions)
+
     def test_admin_defaults_and_existing_values(self):
         form = ContractAdminForm(instance=Contract(signed_on=timezone.datetime(2026, 11, 30).date()))
         self.assertEqual(form.initial["business_type"], "外销")

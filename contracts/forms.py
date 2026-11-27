@@ -46,6 +46,7 @@ class ContractAdminForm(forms.ModelForm):
     class Meta:
         model = Contract
         fields = "__all__"
+        exclude = ("status",)
         widgets = {"country": CountryCodeInput}
 
     def __init__(self, *args, **kwargs):

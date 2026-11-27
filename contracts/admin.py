@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.contrib import messages
 from .forms import ContractAdminForm, LineItemAdminForm, ReceiptAdminForm
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 
@@ -68,11 +67,11 @@ class ContractAdmin(admin.ModelAdmin):
     class Media:
         js = ("contracts/country.js", "contracts/contract_defaults.js")
     readonly_fields = ("continent",)
-    list_display = ("contract_number", "oa_numbers_display", "customer_name", "salesperson", "signed_on", "country", "continent", "currency", "amount", "status")
-    list_filter = ("status", "business_type", "currency", "country", "signed_on")
+    list_display = ("contract_number", "oa_numbers_display", "customer_name", "salesperson", "signed_on", "country", "continent", "currency", "amount")
+    list_filter = ("business_type", "currency", "country", "signed_on")
     search_fields = ("contract_number", "oa_number", "oa_flows__number", "customer_name", "salesperson__username")
     inlines = [OAFlowInline, LineInline, MaterialInline, OutboundInline, ShipmentInline, ReceiptInline, AuditEventInline]
-    actions = ["submit_selected", "approve_selected", "reject_selected"]
+    actions = None
 
     def get_fields(self, request, obj=None):
         fields = list(super().get_fields(request, obj))
@@ -80,34 +79,6 @@ class ContractAdmin(admin.ModelAdmin):
             fields.remove("continent")
             fields.insert(fields.index("country") + 1, "continent")
         return fields
-
-    @admin.action(description="提交审核")
-    def submit_selected(self, request, queryset):
-        for obj in queryset:
-            if obj.salesperson_id == request.user.id and obj.status in ("draft", "rejected"):
-                obj.status = "submitted"
-                obj.save(update_fields=["status"])
-                AuditEvent.objects.create(contract=obj, actor=request.user, action="提交审核")
-
-    @admin.action(description="审核通过")
-    def approve_selected(self, request, queryset):
-        if not (request.user.is_superuser or request.user.groups.filter(name="信息处理员").exists()):
-            self.message_user(request, "仅信息处理员可审核", messages.ERROR)
-            return
-        for obj in queryset.filter(status="submitted"):
-            obj.status = "approved"
-            obj.save(update_fields=["status"])
-            AuditEvent.objects.create(contract=obj, actor=request.user, action="审核通过")
-
-    @admin.action(description="退回补录")
-    def reject_selected(self, request, queryset):
-        if not (request.user.is_superuser or request.user.groups.filter(name="信息处理员").exists()):
-            self.message_user(request, "仅信息处理员可退回", messages.ERROR)
-            return
-        for obj in queryset.filter(status="submitted"):
-            obj.status = "rejected"
-            obj.save(update_fields=["status"])
-            AuditEvent.objects.create(contract=obj, actor=request.user, action="退回补录")
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
