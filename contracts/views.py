@@ -131,7 +131,7 @@ def oa_import_detail(data, materials_added, outbound_added):
 
 
 def fill_oa_defaults(contract):
-    defaults = {"business_type": "外销", "customer_category": "最终用户", "payment_method": "公账", "progress": "生产中"}
+    defaults = {"business_type": "外销", "customer_category": "最终用户", "payment_method": "公账", "progress": "生产中", "industry": "电力与电气", "inquiry_source": "谷歌"}
     changed = []
     for field, value in defaults.items():
         if not getattr(contract, field):

@@ -27,6 +27,7 @@ from .excel_import import flow_numbers, parse_workbook
 from .workflow_import import contract_candidates, parse_workflow_xls
 from .oa_client import describe_oa_page, fetch_oa_html
 from .views import fill_oa_defaults
+from .geography import find_country, continent_for
 
 
 SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
@@ -42,6 +43,8 @@ class WorkbookFieldTests(TestCase):
         self.assertEqual(form.initial["payment_method"], "公账")
         self.assertEqual(form.initial["customer_category"], "最终用户")
         self.assertEqual(form.initial["progress"], "生产中")
+        self.assertEqual(form.initial["industry"], "电力与电气")
+        self.assertEqual(form.initial["inquiry_source"], "谷歌")
         self.assertEqual(str(form.initial["agreed_ship_on"]), "2027-02-28")
         self.assertIs(form.initial["customs_declared"], True)
         self.assertIn("自行开发", [value for value, _ in form.fields["customer_category"].choices])
@@ -58,22 +61,35 @@ class WorkbookFieldTests(TestCase):
         self.assertTrue(form.fields["customer_category"].required)
         self.assertTrue(form.fields["agreed_ship_on"].required)
         country_input = str(form["country"])
-        self.assertIn('value="US" label="United States"', country_input)
-        self.assertIn('list="country-code-options"', country_input)
+        self.assertIn('data-country-source=', country_input)
+        self.assertIn('id="country-suggestions"', country_input)
         self.assertIn("泄漏仪表", [value for value, _ in LineItemAdminForm().fields["product_category"].choices])
         self.assertIn("美元", [value for value, _ in ReceiptAdminForm().fields["currency"].choices])
 
-    def test_country_code_normalizes_to_two_letters(self):
+    def test_country_pinyin_normalizes_to_english_name(self):
         form = ContractAdminForm(instance=Contract())
-        form.cleaned_data = {"country": "united states"}
-        self.assertEqual(form.clean_country(), "US")
+        for input_value in ("taiguo", "TH", "泰国"):
+            form.cleaned_data = {"country": input_value}
+            self.assertEqual(form.clean_country(), "Thailand")
         form.cleaned_data = {"country": "ZZ"}
-        with self.assertRaisesMessage(Exception, "请输入有效的两位国家代码"):
+        with self.assertRaisesMessage(Exception, "请选择有效国家"):
             form.clean_country()
+
+    def test_continent_follows_country_and_existing_region(self):
+        self.assertEqual(find_country("meiguo"), "US")
+        self.assertEqual(continent_for("United States"), "北美洲")
+        self.assertEqual(continent_for("广东"), "亚洲")
+        owner = get_user_model().objects.create_user("geo-owner")
+        contract = Contract.objects.create(contract_number="GEO-1", salesperson=owner, country="Thailand")
+        self.assertEqual(contract.continent, "亚洲")
+        contract.country = "Germany"
+        contract.save(update_fields=["country"])
+        contract.refresh_from_db()
+        self.assertEqual(contract.continent, "欧洲")
 
     def test_oa_defaults_preserve_entered_values(self):
         owner = get_user_model().objects.create_user("defaults-owner")
-        contract = Contract.objects.create(contract_number="DEFAULT-1", salesperson=owner, business_type="内销", customer_category="经销商", payment_method="阿里", progress="已完成", customs_declared=False, signed_on=timezone.datetime(2026, 1, 31).date(), agreed_ship_on=timezone.datetime(2026, 2, 15).date())
+        contract = Contract.objects.create(contract_number="DEFAULT-1", salesperson=owner, business_type="内销", customer_category="经销商", payment_method="阿里", progress="已完成", industry="新能源", inquiry_source="展会", customs_declared=False, signed_on=timezone.datetime(2026, 1, 31).date(), agreed_ship_on=timezone.datetime(2026, 2, 15).date())
         self.assertEqual(fill_oa_defaults(contract), [])
         contract.refresh_from_db()
         self.assertEqual(contract.business_type, "内销")
@@ -254,6 +270,8 @@ class ImportTests(TestCase):
         self.assertEqual(contract.payment_method, "公账")
         self.assertEqual(contract.customer_category, "最终用户")
         self.assertEqual(contract.progress, "生产中")
+        self.assertEqual(contract.industry, "电力与电气")
+        self.assertEqual(contract.inquiry_source, "谷歌")
         self.assertIs(contract.customs_declared, True)
         self.assertEqual(first.product_name, "Meter")
         self.assertEqual(first.model, "M-1")

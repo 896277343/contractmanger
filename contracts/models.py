@@ -15,6 +15,7 @@ class Contract(models.Model):
     customer_category = models.CharField("客户类别", max_length=100, blank=True)
     inquiry_source = models.CharField("询盘来源", max_length=100, blank=True)
     country = models.CharField("国家/地区", max_length=100, blank=True)
+    continent = models.CharField("所属大洲", max_length=20, blank=True, editable=False)
     industry = models.CharField("行业", max_length=100, blank=True)
     currency = models.CharField("合同币种", max_length=20, blank=True)
     freight = models.DecimalField("运费(原币)", max_digits=18, decimal_places=2, null=True, blank=True)
@@ -36,6 +37,13 @@ class Contract(models.Model):
     source_sha256 = models.CharField("OA源文件摘要", max_length=64, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        from .geography import continent_for
+        self.continent = continent_for(self.country)
+        if kwargs.get("update_fields") is not None:
+            kwargs["update_fields"] = set(kwargs["update_fields"]) | {"continent"}
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.contract_number

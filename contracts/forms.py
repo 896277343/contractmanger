@@ -1,14 +1,11 @@
 from django import forms
 from django.utils.html import format_html, format_html_join
-import json
-from pathlib import Path
+from django.templatetags.static import static
 from calendar import monthrange
 from datetime import date
 
 from .models import Contract, LineItem, Receipt
-
-
-COUNTRIES = json.loads((Path(__file__).with_name("countries.json")).read_text(encoding="utf-8"))
+from .geography import COUNTRIES, find_country
 
 
 OPTIONS = {
@@ -40,10 +37,9 @@ def three_months_after(value: date) -> date:
 
 class CountryCodeInput(forms.TextInput):
     def render(self, name, value, attrs=None, renderer=None):
-        attrs = {**(attrs or {}), "list": "country-code-options", "autocomplete": "off", "placeholder": "输入 US、GB、DE 等两位英文代码"}
+        attrs = {**(attrs or {}), "autocomplete": "off", "placeholder": "输入国家拼音、英文名或 US 等代码", "data-country-source": static("contracts/geography.json")}
         widget = super().render(name, value, attrs, renderer)
-        options = format_html_join("", '<option value="{}" label="{}"></option>', COUNTRIES.items())
-        return format_html('{}<datalist id="country-code-options">{}</datalist>', widget, options)
+        return format_html('{}<div id="country-suggestions" role="listbox"></div><span id="country-continent-preview" class="help"></span>', widget)
 
 
 class ContractAdminForm(forms.ModelForm):
@@ -59,7 +55,7 @@ class ContractAdminForm(forms.ModelForm):
         for name in ("oa_number", "signed_on", "contract_number", "customer_category", "inquiry_source", "industry", "payment_method", "progress", "country", "agreed_ship_on"):
             self.fields[name].required = True
         self.fields["customs_declared"].required = True
-        self.fields["country"].help_text = "输入两位英文国家/地区代码，例如 US、GB、DE；也可输入英文全名。"
+        self.fields["country"].help_text = "输入国家拼音、英文名称或两位代码（如 taiguo、Thailand、TH），选中后填写英文国名。"
         self.fields["business_type"].help_text = "默认外销（正式报关）；内销业务请自行改选。"
         self.fields["payment_method"].help_text = "默认公账；通过阿里或私账收款时请改选对应方式。"
         self.fields["customer_category"].help_text = "默认最终用户；经销商、代理商、自行开发等请按实际情况改选。"
@@ -67,7 +63,7 @@ class ContractAdminForm(forms.ModelForm):
         self.fields["agreed_ship_on"].help_text = "默认合同签订日期后三个自然月；可按合同约定修改。"
         self.fields["customs_declared"].help_text = "外销默认是；内销默认否，可按实际报关情况修改。"
         if not self.is_bound:
-            for name, default in (("business_type", "外销"), ("payment_method", "公账"), ("customer_category", "最终用户"), ("progress", "生产中")):
+            for name, default in (("business_type", "外销"), ("payment_method", "公账"), ("customer_category", "最终用户"), ("progress", "生产中"), ("industry", "电力与电气"), ("inquiry_source", "谷歌")):
                 if not getattr(self.instance, name, None):
                     self.initial[name] = default
             if not self.instance.agreed_ship_on and self.instance.signed_on:
@@ -76,6 +72,8 @@ class ContractAdminForm(forms.ModelForm):
                 self.initial["customs_declared"] = (self.instance.business_type or "外销") == "外销"
         self.fields["agreed_ship_on"].widget.attrs["data-saved-value"] = "1" if self.instance.agreed_ship_on else "0"
         self.fields["customs_declared"].widget.attrs["data-saved-value"] = "1" if self.instance.customs_declared is not None else "0"
+        self.fields["industry"].help_text = "默认电力与电气；其他行业请按客户实际情况改选。"
+        self.fields["inquiry_source"].help_text = "默认谷歌；来自展会、介绍或其他渠道时请改选。"
 
     def clean_customs_declared(self):
         value = self.cleaned_data["customs_declared"]
@@ -89,13 +87,10 @@ class ContractAdminForm(forms.ModelForm):
             return value
         if value == self.instance.country:
             return value
-        code = value.upper()
-        if code in COUNTRIES:
-            return code
-        matches = [key for key, name in COUNTRIES.items() if name.casefold() == value.casefold()]
-        if len(matches) != 1:
-            raise forms.ValidationError("请输入有效的两位国家代码或英文国家名称，例如 US、GB、DE。")
-        return matches[0]
+        code = find_country(value)
+        if not code:
+            raise forms.ValidationError("请选择有效国家；可输入拼音、英文名称或两位代码。")
+        return COUNTRIES[code]["name"]
 
 
 class LineItemAdminForm(forms.ModelForm):

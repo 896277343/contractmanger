@@ -1,0 +1,1745 @@
+{
+  "AD": {
+    "continent": "EU",
+    "initials": "ade",
+    "name": "Andorra",
+    "pinyin": "andaoer",
+    "zh": "安道尔"
+  },
+  "AE": {
+    "continent": "AS",
+    "initials": "alblhqzg",
+    "name": "United Arab Emirates",
+    "pinyin": "alabolianheqiuzhangguo",
+    "zh": "阿拉伯联合酋长国"
+  },
+  "AF": {
+    "continent": "AS",
+    "initials": "afh",
+    "name": "Afghanistan",
+    "pinyin": "afuhan",
+    "zh": "阿富汗"
+  },
+  "AG": {
+    "continent": "NA",
+    "initials": "atghbbd",
+    "name": "Antigua and Barbuda",
+    "pinyin": "antiguahebabuda",
+    "zh": "安提瓜和巴布达"
+  },
+  "AI": {
+    "continent": "NA",
+    "initials": "agl",
+    "name": "Anguilla",
+    "pinyin": "anguila",
+    "zh": "安圭拉"
+  },
+  "AL": {
+    "continent": "EU",
+    "initials": "aebny",
+    "name": "Albania",
+    "pinyin": "aerbaniya",
+    "zh": "阿尔巴尼亚"
+  },
+  "AM": {
+    "continent": "AS",
+    "initials": "ymny",
+    "name": "Armenia",
+    "pinyin": "yameiniya",
+    "zh": "亚美尼亚"
+  },
+  "AO": {
+    "continent": "AF",
+    "initials": "agl",
+    "name": "Angola",
+    "pinyin": "angela",
+    "zh": "安哥拉"
+  },
+  "AQ": {
+    "continent": "AN",
+    "initials": "njz",
+    "name": "Antarctica",
+    "pinyin": "nanjizhou",
+    "zh": "南极洲"
+  },
+  "AR": {
+    "continent": "SA",
+    "initials": "agt",
+    "name": "Argentina",
+    "pinyin": "agenting",
+    "zh": "阿根廷"
+  },
+  "AS": {
+    "continent": "OC",
+    "initials": "mssmy",
+    "name": "American Samoa",
+    "pinyin": "meishusamoya",
+    "zh": "美属萨摩亚"
+  },
+  "AT": {
+    "continent": "EU",
+    "initials": "adl",
+    "name": "Austria",
+    "pinyin": "aodili",
+    "zh": "奥地利"
+  },
+  "AU": {
+    "continent": "OC",
+    "initials": "adly",
+    "name": "Australia",
+    "pinyin": "aodaliya",
+    "zh": "澳大利亚"
+  },
+  "AW": {
+    "continent": "NA",
+    "initials": "alb",
+    "name": "Aruba",
+    "pinyin": "aluba",
+    "zh": "阿鲁巴"
+  },
+  "AX": {
+    "continent": "EU",
+    "initials": "alqd",
+    "name": "Åland Islands",
+    "pinyin": "aolanqundao",
+    "zh": "奥兰群岛"
+  },
+  "AZ": {
+    "continent": "AS",
+    "initials": "asbj",
+    "name": "Azerbaijan",
+    "pinyin": "asaibaijiang",
+    "zh": "阿塞拜疆"
+  },
+  "BA": {
+    "continent": "EU",
+    "initials": "bsnyhhsgwn",
+    "name": "Bosnia and Herzegovina",
+    "pinyin": "bosiniyaheheisaigeweina",
+    "zh": "波斯尼亚和黑塞哥维那"
+  },
+  "BB": {
+    "continent": "NA",
+    "initials": "bbds",
+    "name": "Barbados",
+    "pinyin": "babaduosi",
+    "zh": "巴巴多斯"
+  },
+  "BD": {
+    "continent": "AS",
+    "initials": "mjlg",
+    "name": "Bangladesh",
+    "pinyin": "mengjialaguo",
+    "zh": "孟加拉国"
+  },
+  "BE": {
+    "continent": "EU",
+    "initials": "bls",
+    "name": "Belgium",
+    "pinyin": "bilishi",
+    "zh": "比利时"
+  },
+  "BF": {
+    "continent": "AF",
+    "initials": "bjnfs",
+    "name": "Burkina Faso",
+    "pinyin": "bujinafasuo",
+    "zh": "布基纳法索"
+  },
+  "BG": {
+    "continent": "EU",
+    "initials": "bjly",
+    "name": "Bulgaria",
+    "pinyin": "baojialiya",
+    "zh": "保加利亚"
+  },
+  "BH": {
+    "continent": "AS",
+    "initials": "bl",
+    "name": "Bahrain",
+    "pinyin": "balin",
+    "zh": "巴林"
+  },
+  "BI": {
+    "continent": "AF",
+    "initials": "bld",
+    "name": "Burundi",
+    "pinyin": "bulongdi",
+    "zh": "布隆迪"
+  },
+  "BJ": {
+    "continent": "AF",
+    "initials": "bn",
+    "name": "Benin",
+    "pinyin": "beining",
+    "zh": "贝宁"
+  },
+  "BL": {
+    "continent": "NA",
+    "initials": "sbtlm",
+    "name": "Saint Barthélemy",
+    "pinyin": "shengbataileimi",
+    "zh": "圣巴泰勒米"
+  },
+  "BM": {
+    "continent": "NA",
+    "initials": "bmd",
+    "name": "Bermuda",
+    "pinyin": "baimuda",
+    "zh": "百慕大"
+  },
+  "BN": {
+    "continent": "AS",
+    "initials": "wl",
+    "name": "Brunei Darussalam",
+    "pinyin": "wenlai",
+    "zh": "文莱"
+  },
+  "BO": {
+    "continent": "SA",
+    "initials": "blwy",
+    "name": "Bolivia, Plurinational State of",
+    "pinyin": "boliweiya",
+    "zh": "玻利维亚"
+  },
+  "BQ": {
+    "continent": "NA",
+    "initials": "hsjlbq",
+    "name": "Bonaire, Sint Eustatius and Saba",
+    "pinyin": "heshujialeibiqu",
+    "zh": "荷属加勒比区"
+  },
+  "BR": {
+    "continent": "SA",
+    "initials": "bx",
+    "name": "Brazil",
+    "pinyin": "baxi",
+    "zh": "巴西"
+  },
+  "BS": {
+    "continent": "NA",
+    "initials": "bhm",
+    "name": "Bahamas",
+    "pinyin": "bahama",
+    "zh": "巴哈马"
+  },
+  "BT": {
+    "continent": "AS",
+    "initials": "bd",
+    "name": "Bhutan",
+    "pinyin": "budan",
+    "zh": "不丹"
+  },
+  "BV": {
+    "continent": "AN",
+    "initials": "bwd",
+    "name": "Bouvet Island",
+    "pinyin": "buweidao",
+    "zh": "布韦岛"
+  },
+  "BW": {
+    "continent": "AF",
+    "initials": "bcwn",
+    "name": "Botswana",
+    "pinyin": "bociwana",
+    "zh": "博茨瓦纳"
+  },
+  "BY": {
+    "continent": "EU",
+    "initials": "bels",
+    "name": "Belarus",
+    "pinyin": "baieluosi",
+    "zh": "白俄罗斯"
+  },
+  "BZ": {
+    "continent": "NA",
+    "initials": "blz",
+    "name": "Belize",
+    "pinyin": "bolizi",
+    "zh": "伯利兹"
+  },
+  "CA": {
+    "continent": "NA",
+    "initials": "jnd",
+    "name": "Canada",
+    "pinyin": "jianada",
+    "zh": "加拿大"
+  },
+  "CC": {
+    "continent": "AS",
+    "initials": "kks（jl）qd",
+    "name": "Cocos (Keeling) Islands",
+    "pinyin": "kekesi（jilin）qundao",
+    "zh": "科科斯（基林）群岛"
+  },
+  "CD": {
+    "continent": "AF",
+    "initials": "gg（j）",
+    "name": "Congo, The Democratic Republic of the",
+    "pinyin": "gangguo（jin）",
+    "zh": "刚果（金）"
+  },
+  "CF": {
+    "continent": "AF",
+    "initials": "zfghg",
+    "name": "Central African Republic",
+    "pinyin": "zhongfeigongheguo",
+    "zh": "中非共和国"
+  },
+  "CG": {
+    "continent": "AF",
+    "initials": "gg（b）",
+    "name": "Congo",
+    "pinyin": "gangguo（bu）",
+    "zh": "刚果（布）"
+  },
+  "CH": {
+    "continent": "EU",
+    "initials": "rs",
+    "name": "Switzerland",
+    "pinyin": "ruishi",
+    "zh": "瑞士"
+  },
+  "CI": {
+    "continent": "AF",
+    "initials": "ktdw",
+    "name": "Côte d'Ivoire",
+    "pinyin": "ketediwa",
+    "zh": "科特迪瓦"
+  },
+  "CK": {
+    "continent": "OC",
+    "initials": "kkqd",
+    "name": "Cook Islands",
+    "pinyin": "kukequndao",
+    "zh": "库克群岛"
+  },
+  "CL": {
+    "continent": "SA",
+    "initials": "zl",
+    "name": "Chile",
+    "pinyin": "zhili",
+    "zh": "智利"
+  },
+  "CM": {
+    "continent": "AF",
+    "initials": "kml",
+    "name": "Cameroon",
+    "pinyin": "kamailong",
+    "zh": "喀麦隆"
+  },
+  "CN": {
+    "continent": "AS",
+    "initials": "zg",
+    "name": "China",
+    "pinyin": "zhongguo",
+    "zh": "中国"
+  },
+  "CO": {
+    "continent": "SA",
+    "initials": "glby",
+    "name": "Colombia",
+    "pinyin": "gelunbiya",
+    "zh": "哥伦比亚"
+  },
+  "CR": {
+    "continent": "NA",
+    "initials": "gsdlj",
+    "name": "Costa Rica",
+    "pinyin": "gesidalijia",
+    "zh": "哥斯达黎加"
+  },
+  "CU": {
+    "continent": "NA",
+    "initials": "gb",
+    "name": "Cuba",
+    "pinyin": "guba",
+    "zh": "古巴"
+  },
+  "CV": {
+    "continent": "AF",
+    "initials": "fdj",
+    "name": "Cabo Verde",
+    "pinyin": "fudejiao",
+    "zh": "佛得角"
+  },
+  "CW": {
+    "continent": "NA",
+    "initials": "kls",
+    "name": "Curaçao",
+    "pinyin": "kulasuo",
+    "zh": "库拉索"
+  },
+  "CX": {
+    "continent": "OC",
+    "initials": "sdd",
+    "name": "Christmas Island",
+    "pinyin": "shengdandao",
+    "zh": "圣诞岛"
+  },
+  "CY": {
+    "continent": "EU",
+    "initials": "spls",
+    "name": "Cyprus",
+    "pinyin": "saipulusi",
+    "zh": "塞浦路斯"
+  },
+  "CZ": {
+    "continent": "EU",
+    "initials": "jk",
+    "name": "Czechia",
+    "pinyin": "jieke",
+    "zh": "捷克"
+  },
+  "DE": {
+    "continent": "EU",
+    "initials": "dg",
+    "name": "Germany",
+    "pinyin": "deguo",
+    "zh": "德国"
+  },
+  "DJ": {
+    "continent": "AF",
+    "initials": "jbt",
+    "name": "Djibouti",
+    "pinyin": "jibuti",
+    "zh": "吉布提"
+  },
+  "DK": {
+    "continent": "EU",
+    "initials": "dm",
+    "name": "Denmark",
+    "pinyin": "danmai",
+    "zh": "丹麦"
+  },
+  "DM": {
+    "continent": "NA",
+    "initials": "dmnk",
+    "name": "Dominica",
+    "pinyin": "duominike",
+    "zh": "多米尼克"
+  },
+  "DO": {
+    "continent": "NA",
+    "initials": "dmnjghg",
+    "name": "Dominican Republic",
+    "pinyin": "duominijiagongheguo",
+    "zh": "多米尼加共和国"
+  },
+  "DZ": {
+    "continent": "AF",
+    "initials": "aejly",
+    "name": "Algeria",
+    "pinyin": "aerjiliya",
+    "zh": "阿尔及利亚"
+  },
+  "EC": {
+    "continent": "SA",
+    "initials": "egde",
+    "name": "Ecuador",
+    "pinyin": "eguaduoer",
+    "zh": "厄瓜多尔"
+  },
+  "EE": {
+    "continent": "EU",
+    "initials": "asny",
+    "name": "Estonia",
+    "pinyin": "aishaniya",
+    "zh": "爱沙尼亚"
+  },
+  "EG": {
+    "continent": "AF",
+    "initials": "aj",
+    "name": "Egypt",
+    "pinyin": "aiji",
+    "zh": "埃及"
+  },
+  "EH": {
+    "continent": "AF",
+    "initials": "xshl",
+    "name": "Western Sahara",
+    "pinyin": "xisahala",
+    "zh": "西撒哈拉"
+  },
+  "ER": {
+    "continent": "AF",
+    "initials": "eltly",
+    "name": "Eritrea",
+    "pinyin": "eliteliya",
+    "zh": "厄立特里亚"
+  },
+  "ES": {
+    "continent": "EU",
+    "initials": "xby",
+    "name": "Spain",
+    "pinyin": "xibanya",
+    "zh": "西班牙"
+  },
+  "ET": {
+    "continent": "AF",
+    "initials": "aseby",
+    "name": "Ethiopia",
+    "pinyin": "aisaiebiya",
+    "zh": "埃塞俄比亚"
+  },
+  "FI": {
+    "continent": "EU",
+    "initials": "fl",
+    "name": "Finland",
+    "pinyin": "fenlan",
+    "zh": "芬兰"
+  },
+  "FJ": {
+    "continent": "OC",
+    "initials": "fj",
+    "name": "Fiji",
+    "pinyin": "feiji",
+    "zh": "斐济"
+  },
+  "FK": {
+    "continent": "SA",
+    "initials": "fklqd",
+    "name": "Falkland Islands (Malvinas)",
+    "pinyin": "fukelanqundao",
+    "zh": "福克兰群岛"
+  },
+  "FM": {
+    "continent": "OC",
+    "initials": "mklnxy",
+    "name": "Micronesia, Federated States of",
+    "pinyin": "mikeluonixiya",
+    "zh": "密克罗尼西亚"
+  },
+  "FO": {
+    "continent": "EU",
+    "initials": "flqd",
+    "name": "Faroe Islands",
+    "pinyin": "faluoqundao",
+    "zh": "法罗群岛"
+  },
+  "FR": {
+    "continent": "EU",
+    "initials": "fg",
+    "name": "France",
+    "pinyin": "faguo",
+    "zh": "法国"
+  },
+  "GA": {
+    "continent": "AF",
+    "initials": "jp",
+    "name": "Gabon",
+    "pinyin": "jiapeng",
+    "zh": "加蓬"
+  },
+  "GB": {
+    "continent": "EU",
+    "initials": "yg",
+    "name": "United Kingdom",
+    "pinyin": "yingguo",
+    "zh": "英国"
+  },
+  "GD": {
+    "continent": "NA",
+    "initials": "glnd",
+    "name": "Grenada",
+    "pinyin": "gelinnada",
+    "zh": "格林纳达"
+  },
+  "GE": {
+    "continent": "AS",
+    "initials": "gljy",
+    "name": "Georgia",
+    "pinyin": "gelujiya",
+    "zh": "格鲁吉亚"
+  },
+  "GF": {
+    "continent": "SA",
+    "initials": "fsgyn",
+    "name": "French Guiana",
+    "pinyin": "fashuguiyana",
+    "zh": "法属圭亚那"
+  },
+  "GG": {
+    "continent": "EU",
+    "initials": "gxd",
+    "name": "Guernsey",
+    "pinyin": "genxidao",
+    "zh": "根西岛"
+  },
+  "GH": {
+    "continent": "AF",
+    "initials": "jn",
+    "name": "Ghana",
+    "pinyin": "jiana",
+    "zh": "加纳"
+  },
+  "GI": {
+    "continent": "EU",
+    "initials": "zblt",
+    "name": "Gibraltar",
+    "pinyin": "zhibuluotuo",
+    "zh": "直布罗陀"
+  },
+  "GL": {
+    "continent": "NA",
+    "initials": "gll",
+    "name": "Greenland",
+    "pinyin": "gelinglan",
+    "zh": "格陵兰"
+  },
+  "GM": {
+    "continent": "AF",
+    "initials": "gby",
+    "name": "Gambia",
+    "pinyin": "gangbiya",
+    "zh": "冈比亚"
+  },
+  "GN": {
+    "continent": "AF",
+    "initials": "jny",
+    "name": "Guinea",
+    "pinyin": "jineiya",
+    "zh": "几内亚"
+  },
+  "GP": {
+    "continent": "NA",
+    "initials": "gdlp",
+    "name": "Guadeloupe",
+    "pinyin": "guadeluopu",
+    "zh": "瓜德罗普"
+  },
+  "GQ": {
+    "continent": "AF",
+    "initials": "cdjny",
+    "name": "Equatorial Guinea",
+    "pinyin": "chidaojineiya",
+    "zh": "赤道几内亚"
+  },
+  "GR": {
+    "continent": "EU",
+    "initials": "xl",
+    "name": "Greece",
+    "pinyin": "xila",
+    "zh": "希腊"
+  },
+  "GS": {
+    "continent": "AN",
+    "initials": "nqzyhnswqqd",
+    "name": "South Georgia and the South Sandwich Islands",
+    "pinyin": "nanqiaozhiyahenansangweiqiqundao",
+    "zh": "南乔治亚和南桑威奇群岛"
+  },
+  "GT": {
+    "continent": "NA",
+    "initials": "wdml",
+    "name": "Guatemala",
+    "pinyin": "weidimala",
+    "zh": "危地马拉"
+  },
+  "GU": {
+    "continent": "OC",
+    "initials": "gd",
+    "name": "Guam",
+    "pinyin": "guandao",
+    "zh": "关岛"
+  },
+  "GW": {
+    "continent": "AF",
+    "initials": "jnybs",
+    "name": "Guinea-Bissau",
+    "pinyin": "jineiyabishao",
+    "zh": "几内亚比绍"
+  },
+  "GY": {
+    "continent": "SA",
+    "initials": "gyn",
+    "name": "Guyana",
+    "pinyin": "guiyana",
+    "zh": "圭亚那"
+  },
+  "HK": {
+    "continent": "AS",
+    "initials": "zgxgtbxzq",
+    "name": "Hong Kong",
+    "pinyin": "zhongguoxianggangtebiexingzhengqu",
+    "zh": "中国香港特别行政区"
+  },
+  "HM": {
+    "continent": "AN",
+    "initials": "hddhmktnqd",
+    "name": "Heard Island and McDonald Islands",
+    "pinyin": "hededaohemaiketangnaqundao",
+    "zh": "赫德岛和麦克唐纳群岛"
+  },
+  "HN": {
+    "continent": "NA",
+    "initials": "hdls",
+    "name": "Honduras",
+    "pinyin": "hongdoulasi",
+    "zh": "洪都拉斯"
+  },
+  "HR": {
+    "continent": "EU",
+    "initials": "kldy",
+    "name": "Croatia",
+    "pinyin": "keluodiya",
+    "zh": "克罗地亚"
+  },
+  "HT": {
+    "continent": "NA",
+    "initials": "hd",
+    "name": "Haiti",
+    "pinyin": "haidi",
+    "zh": "海地"
+  },
+  "HU": {
+    "continent": "EU",
+    "initials": "xyl",
+    "name": "Hungary",
+    "pinyin": "xiongyali",
+    "zh": "匈牙利"
+  },
+  "ID": {
+    "continent": "AS",
+    "initials": "ydnxy",
+    "name": "Indonesia",
+    "pinyin": "yindunixiya",
+    "zh": "印度尼西亚"
+  },
+  "IE": {
+    "continent": "EU",
+    "initials": "ael",
+    "name": "Ireland",
+    "pinyin": "aierlan",
+    "zh": "爱尔兰"
+  },
+  "IL": {
+    "continent": "AS",
+    "initials": "ysl",
+    "name": "Israel",
+    "pinyin": "yiselie",
+    "zh": "以色列"
+  },
+  "IM": {
+    "continent": "EU",
+    "initials": "med",
+    "name": "Isle of Man",
+    "pinyin": "maendao",
+    "zh": "马恩岛"
+  },
+  "IN": {
+    "continent": "AS",
+    "initials": "yd",
+    "name": "India",
+    "pinyin": "yindu",
+    "zh": "印度"
+  },
+  "IO": {
+    "continent": "AS",
+    "initials": "ysydyld",
+    "name": "British Indian Ocean Territory",
+    "pinyin": "yingshuyinduyanglingdi",
+    "zh": "英属印度洋领地"
+  },
+  "IQ": {
+    "continent": "AS",
+    "initials": "ylk",
+    "name": "Iraq",
+    "pinyin": "yilake",
+    "zh": "伊拉克"
+  },
+  "IR": {
+    "continent": "AS",
+    "initials": "yl",
+    "name": "Iran, Islamic Republic of",
+    "pinyin": "yilang",
+    "zh": "伊朗"
+  },
+  "IS": {
+    "continent": "EU",
+    "initials": "bd",
+    "name": "Iceland",
+    "pinyin": "bingdao",
+    "zh": "冰岛"
+  },
+  "IT": {
+    "continent": "EU",
+    "initials": "ydl",
+    "name": "Italy",
+    "pinyin": "yidali",
+    "zh": "意大利"
+  },
+  "JE": {
+    "continent": "EU",
+    "initials": "zxd",
+    "name": "Jersey",
+    "pinyin": "zexidao",
+    "zh": "泽西岛"
+  },
+  "JM": {
+    "continent": "NA",
+    "initials": "ymj",
+    "name": "Jamaica",
+    "pinyin": "yamaijia",
+    "zh": "牙买加"
+  },
+  "JO": {
+    "continent": "AS",
+    "initials": "yd",
+    "name": "Jordan",
+    "pinyin": "yuedan",
+    "zh": "约旦"
+  },
+  "JP": {
+    "continent": "AS",
+    "initials": "rb",
+    "name": "Japan",
+    "pinyin": "riben",
+    "zh": "日本"
+  },
+  "KE": {
+    "continent": "AF",
+    "initials": "kny",
+    "name": "Kenya",
+    "pinyin": "kenniya",
+    "zh": "肯尼亚"
+  },
+  "KG": {
+    "continent": "AS",
+    "initials": "jejsst",
+    "name": "Kyrgyzstan",
+    "pinyin": "jierjisisitan",
+    "zh": "吉尔吉斯斯坦"
+  },
+  "KH": {
+    "continent": "AS",
+    "initials": "jpz",
+    "name": "Cambodia",
+    "pinyin": "jianpuzhai",
+    "zh": "柬埔寨"
+  },
+  "KI": {
+    "continent": "OC",
+    "initials": "jlbs",
+    "name": "Kiribati",
+    "pinyin": "jilibasi",
+    "zh": "基里巴斯"
+  },
+  "KM": {
+    "continent": "AF",
+    "initials": "kml",
+    "name": "Comoros",
+    "pinyin": "kemoluo",
+    "zh": "科摩罗"
+  },
+  "KN": {
+    "continent": "NA",
+    "initials": "sjchnws",
+    "name": "Saint Kitts and Nevis",
+    "pinyin": "shengjiciheniweisi",
+    "zh": "圣基茨和尼维斯"
+  },
+  "KP": {
+    "continent": "AS",
+    "initials": "cx",
+    "name": "Korea, Democratic People's Republic of",
+    "pinyin": "chaoxian",
+    "zh": "朝鲜"
+  },
+  "KR": {
+    "continent": "AS",
+    "initials": "hg",
+    "name": "Korea, Republic of",
+    "pinyin": "hanguo",
+    "zh": "韩国"
+  },
+  "KW": {
+    "continent": "AS",
+    "initials": "kwt",
+    "name": "Kuwait",
+    "pinyin": "keweite",
+    "zh": "科威特"
+  },
+  "KY": {
+    "continent": "NA",
+    "initials": "kmqd",
+    "name": "Cayman Islands",
+    "pinyin": "kaimanqundao",
+    "zh": "开曼群岛"
+  },
+  "KZ": {
+    "continent": "AS",
+    "initials": "hskst",
+    "name": "Kazakhstan",
+    "pinyin": "hasakesitan",
+    "zh": "哈萨克斯坦"
+  },
+  "LA": {
+    "continent": "AS",
+    "initials": "lw",
+    "name": "Lao People's Democratic Republic",
+    "pinyin": "laowo",
+    "zh": "老挝"
+  },
+  "LB": {
+    "continent": "AS",
+    "initials": "lbn",
+    "name": "Lebanon",
+    "pinyin": "libanen",
+    "zh": "黎巴嫩"
+  },
+  "LC": {
+    "continent": "NA",
+    "initials": "slxy",
+    "name": "Saint Lucia",
+    "pinyin": "shengluxiya",
+    "zh": "圣卢西亚"
+  },
+  "LI": {
+    "continent": "EU",
+    "initials": "lzdsd",
+    "name": "Liechtenstein",
+    "pinyin": "liezhidunshideng",
+    "zh": "列支敦士登"
+  },
+  "LK": {
+    "continent": "AS",
+    "initials": "sllk",
+    "name": "Sri Lanka",
+    "pinyin": "sililanka",
+    "zh": "斯里兰卡"
+  },
+  "LR": {
+    "continent": "AF",
+    "initials": "lbly",
+    "name": "Liberia",
+    "pinyin": "libiliya",
+    "zh": "利比里亚"
+  },
+  "LS": {
+    "continent": "AF",
+    "initials": "lst",
+    "name": "Lesotho",
+    "pinyin": "laisuotuo",
+    "zh": "莱索托"
+  },
+  "LT": {
+    "continent": "EU",
+    "initials": "ltw",
+    "name": "Lithuania",
+    "pinyin": "litaowan",
+    "zh": "立陶宛"
+  },
+  "LU": {
+    "continent": "EU",
+    "initials": "lsb",
+    "name": "Luxembourg",
+    "pinyin": "lusenbao",
+    "zh": "卢森堡"
+  },
+  "LV": {
+    "continent": "EU",
+    "initials": "ltwy",
+    "name": "Latvia",
+    "pinyin": "latuoweiya",
+    "zh": "拉脱维亚"
+  },
+  "LY": {
+    "continent": "AF",
+    "initials": "lby",
+    "name": "Libya",
+    "pinyin": "libiya",
+    "zh": "利比亚"
+  },
+  "MA": {
+    "continent": "AF",
+    "initials": "mlg",
+    "name": "Morocco",
+    "pinyin": "moluoge",
+    "zh": "摩洛哥"
+  },
+  "MC": {
+    "continent": "EU",
+    "initials": "mng",
+    "name": "Monaco",
+    "pinyin": "monage",
+    "zh": "摩纳哥"
+  },
+  "MD": {
+    "continent": "EU",
+    "initials": "medw",
+    "name": "Moldova, Republic of",
+    "pinyin": "moerduowa",
+    "zh": "摩尔多瓦"
+  },
+  "ME": {
+    "continent": "EU",
+    "initials": "hs",
+    "name": "Montenegro",
+    "pinyin": "heishan",
+    "zh": "黑山"
+  },
+  "MF": {
+    "continent": "NA",
+    "initials": "fssmd",
+    "name": "Saint Martin (French part)",
+    "pinyin": "fashushengmading",
+    "zh": "法属圣马丁"
+  },
+  "MG": {
+    "continent": "AF",
+    "initials": "mdjsj",
+    "name": "Madagascar",
+    "pinyin": "madajiasijia",
+    "zh": "马达加斯加"
+  },
+  "MH": {
+    "continent": "OC",
+    "initials": "mseqd",
+    "name": "Marshall Islands",
+    "pinyin": "mashaoerqundao",
+    "zh": "马绍尔群岛"
+  },
+  "MK": {
+    "continent": "EU",
+    "initials": "bmqd",
+    "name": "North Macedonia",
+    "pinyin": "beimaqidun",
+    "zh": "北马其顿"
+  },
+  "ML": {
+    "continent": "AF",
+    "initials": "ml",
+    "name": "Mali",
+    "pinyin": "mali",
+    "zh": "马里"
+  },
+  "MM": {
+    "continent": "AS",
+    "initials": "md",
+    "name": "Myanmar",
+    "pinyin": "miandian",
+    "zh": "缅甸"
+  },
+  "MN": {
+    "continent": "AS",
+    "initials": "mg",
+    "name": "Mongolia",
+    "pinyin": "menggu",
+    "zh": "蒙古"
+  },
+  "MO": {
+    "continent": "AS",
+    "initials": "zgamtbxzq",
+    "name": "Macao",
+    "pinyin": "zhongguoaomentebiexingzhengqu",
+    "zh": "中国澳门特别行政区"
+  },
+  "MP": {
+    "continent": "OC",
+    "initials": "bmlynqd",
+    "name": "Northern Mariana Islands",
+    "pinyin": "beimaliyanaqundao",
+    "zh": "北马里亚纳群岛"
+  },
+  "MQ": {
+    "continent": "NA",
+    "initials": "mtnk",
+    "name": "Martinique",
+    "pinyin": "matinike",
+    "zh": "马提尼克"
+  },
+  "MR": {
+    "continent": "AF",
+    "initials": "mltny",
+    "name": "Mauritania",
+    "pinyin": "maolitaniya",
+    "zh": "毛里塔尼亚"
+  },
+  "MS": {
+    "continent": "NA",
+    "initials": "mtslt",
+    "name": "Montserrat",
+    "pinyin": "mengtesailate",
+    "zh": "蒙特塞拉特"
+  },
+  "MT": {
+    "continent": "EU",
+    "initials": "met",
+    "name": "Malta",
+    "pinyin": "maerta",
+    "zh": "马耳他"
+  },
+  "MU": {
+    "continent": "AF",
+    "initials": "mlqs",
+    "name": "Mauritius",
+    "pinyin": "maoliqiusi",
+    "zh": "毛里求斯"
+  },
+  "MV": {
+    "continent": "AS",
+    "initials": "medf",
+    "name": "Maldives",
+    "pinyin": "maerdaifu",
+    "zh": "马尔代夫"
+  },
+  "MW": {
+    "continent": "AF",
+    "initials": "mlw",
+    "name": "Malawi",
+    "pinyin": "malawei",
+    "zh": "马拉维"
+  },
+  "MX": {
+    "continent": "NA",
+    "initials": "mxg",
+    "name": "Mexico",
+    "pinyin": "moxige",
+    "zh": "墨西哥"
+  },
+  "MY": {
+    "continent": "AS",
+    "initials": "mlxy",
+    "name": "Malaysia",
+    "pinyin": "malaixiya",
+    "zh": "马来西亚"
+  },
+  "MZ": {
+    "continent": "AF",
+    "initials": "msbk",
+    "name": "Mozambique",
+    "pinyin": "mosangbike",
+    "zh": "莫桑比克"
+  },
+  "NA": {
+    "continent": "AF",
+    "initials": "nmby",
+    "name": "Namibia",
+    "pinyin": "namibiya",
+    "zh": "纳米比亚"
+  },
+  "NC": {
+    "continent": "OC",
+    "initials": "xkldny",
+    "name": "New Caledonia",
+    "pinyin": "xinkaliduoniya",
+    "zh": "新喀里多尼亚"
+  },
+  "NE": {
+    "continent": "AF",
+    "initials": "nre",
+    "name": "Niger",
+    "pinyin": "nirier",
+    "zh": "尼日尔"
+  },
+  "NF": {
+    "continent": "OC",
+    "initials": "nfkd",
+    "name": "Norfolk Island",
+    "pinyin": "nuofukedao",
+    "zh": "诺福克岛"
+  },
+  "NG": {
+    "continent": "AF",
+    "initials": "nrly",
+    "name": "Nigeria",
+    "pinyin": "niriliya",
+    "zh": "尼日利亚"
+  },
+  "NI": {
+    "continent": "NA",
+    "initials": "njlg",
+    "name": "Nicaragua",
+    "pinyin": "nijialagua",
+    "zh": "尼加拉瓜"
+  },
+  "NL": {
+    "continent": "EU",
+    "initials": "hl",
+    "name": "Netherlands",
+    "pinyin": "helan",
+    "zh": "荷兰"
+  },
+  "NO": {
+    "continent": "EU",
+    "initials": "nw",
+    "name": "Norway",
+    "pinyin": "nuowei",
+    "zh": "挪威"
+  },
+  "NP": {
+    "continent": "AS",
+    "initials": "npe",
+    "name": "Nepal",
+    "pinyin": "nipoer",
+    "zh": "尼泊尔"
+  },
+  "NR": {
+    "continent": "OC",
+    "initials": "nl",
+    "name": "Nauru",
+    "pinyin": "naolu",
+    "zh": "瑙鲁"
+  },
+  "NU": {
+    "continent": "OC",
+    "initials": "na",
+    "name": "Niue",
+    "pinyin": "niuai",
+    "zh": "纽埃"
+  },
+  "NZ": {
+    "continent": "OC",
+    "initials": "xxl",
+    "name": "New Zealand",
+    "pinyin": "xinxilan",
+    "zh": "新西兰"
+  },
+  "OM": {
+    "continent": "AS",
+    "initials": "am",
+    "name": "Oman",
+    "pinyin": "aman",
+    "zh": "阿曼"
+  },
+  "PA": {
+    "continent": "NA",
+    "initials": "bnm",
+    "name": "Panama",
+    "pinyin": "banama",
+    "zh": "巴拿马"
+  },
+  "PE": {
+    "continent": "SA",
+    "initials": "bl",
+    "name": "Peru",
+    "pinyin": "bilu",
+    "zh": "秘鲁"
+  },
+  "PF": {
+    "continent": "OC",
+    "initials": "fsblnxy",
+    "name": "French Polynesia",
+    "pinyin": "fashubolinixiya",
+    "zh": "法属波利尼西亚"
+  },
+  "PG": {
+    "continent": "OC",
+    "initials": "bbyxjny",
+    "name": "Papua New Guinea",
+    "pinyin": "babuyaxinjineiya",
+    "zh": "巴布亚新几内亚"
+  },
+  "PH": {
+    "continent": "AS",
+    "initials": "flb",
+    "name": "Philippines",
+    "pinyin": "feilvbin",
+    "zh": "菲律宾"
+  },
+  "PK": {
+    "continent": "AS",
+    "initials": "bjst",
+    "name": "Pakistan",
+    "pinyin": "bajisitan",
+    "zh": "巴基斯坦"
+  },
+  "PL": {
+    "continent": "EU",
+    "initials": "bl",
+    "name": "Poland",
+    "pinyin": "bolan",
+    "zh": "波兰"
+  },
+  "PM": {
+    "continent": "NA",
+    "initials": "spaehmklqd",
+    "name": "Saint Pierre and Miquelon",
+    "pinyin": "shengpiaierhemikelongqundao",
+    "zh": "圣皮埃尔和密克隆群岛"
+  },
+  "PN": {
+    "continent": "OC",
+    "initials": "ptkeqd",
+    "name": "Pitcairn",
+    "pinyin": "pitekaienqundao",
+    "zh": "皮特凯恩群岛"
+  },
+  "PR": {
+    "continent": "NA",
+    "initials": "bdlg",
+    "name": "Puerto Rico",
+    "pinyin": "boduolige",
+    "zh": "波多黎各"
+  },
+  "PS": {
+    "continent": "AS",
+    "initials": "blstlt",
+    "name": "Palestine, State of",
+    "pinyin": "balesitanlingtu",
+    "zh": "巴勒斯坦领土"
+  },
+  "PT": {
+    "continent": "EU",
+    "initials": "pty",
+    "name": "Portugal",
+    "pinyin": "putaoya",
+    "zh": "葡萄牙"
+  },
+  "PW": {
+    "continent": "OC",
+    "initials": "pl",
+    "name": "Palau",
+    "pinyin": "palao",
+    "zh": "帕劳"
+  },
+  "PY": {
+    "continent": "SA",
+    "initials": "blg",
+    "name": "Paraguay",
+    "pinyin": "balagui",
+    "zh": "巴拉圭"
+  },
+  "QA": {
+    "continent": "AS",
+    "initials": "kte",
+    "name": "Qatar",
+    "pinyin": "kataer",
+    "zh": "卡塔尔"
+  },
+  "RE": {
+    "continent": "AF",
+    "initials": "lnw",
+    "name": "Réunion",
+    "pinyin": "liuniwang",
+    "zh": "留尼汪"
+  },
+  "RO": {
+    "continent": "EU",
+    "initials": "lmny",
+    "name": "Romania",
+    "pinyin": "luomaniya",
+    "zh": "罗马尼亚"
+  },
+  "RS": {
+    "continent": "EU",
+    "initials": "sewy",
+    "name": "Serbia",
+    "pinyin": "saierweiya",
+    "zh": "塞尔维亚"
+  },
+  "RU": {
+    "continent": "EU",
+    "initials": "els",
+    "name": "Russian Federation",
+    "pinyin": "eluosi",
+    "zh": "俄罗斯"
+  },
+  "RW": {
+    "continent": "AF",
+    "initials": "lwd",
+    "name": "Rwanda",
+    "pinyin": "luwangda",
+    "zh": "卢旺达"
+  },
+  "SA": {
+    "continent": "AS",
+    "initials": "stalb",
+    "name": "Saudi Arabia",
+    "pinyin": "shatealabo",
+    "zh": "沙特阿拉伯"
+  },
+  "SB": {
+    "continent": "OC",
+    "initials": "slmqd",
+    "name": "Solomon Islands",
+    "pinyin": "suoluomenqundao",
+    "zh": "所罗门群岛"
+  },
+  "SC": {
+    "continent": "AF",
+    "initials": "sse",
+    "name": "Seychelles",
+    "pinyin": "saisheer",
+    "zh": "塞舌尔"
+  },
+  "SD": {
+    "continent": "AF",
+    "initials": "sd",
+    "name": "Sudan",
+    "pinyin": "sudan",
+    "zh": "苏丹"
+  },
+  "SE": {
+    "continent": "EU",
+    "initials": "rd",
+    "name": "Sweden",
+    "pinyin": "ruidian",
+    "zh": "瑞典"
+  },
+  "SG": {
+    "continent": "AS",
+    "initials": "xjp",
+    "name": "Singapore",
+    "pinyin": "xinjiapo",
+    "zh": "新加坡"
+  },
+  "SH": {
+    "continent": "AF",
+    "initials": "shln",
+    "name": "Saint Helena, Ascension and Tristan da Cunha",
+    "pinyin": "shengheleina",
+    "zh": "圣赫勒拿"
+  },
+  "SI": {
+    "continent": "EU",
+    "initials": "slwny",
+    "name": "Slovenia",
+    "pinyin": "siluowenniya",
+    "zh": "斯洛文尼亚"
+  },
+  "SJ": {
+    "continent": "EU",
+    "initials": "swebhymy",
+    "name": "Svalbard and Jan Mayen",
+    "pinyin": "siwaerbaheyangmayan",
+    "zh": "斯瓦尔巴和扬马延"
+  },
+  "SK": {
+    "continent": "EU",
+    "initials": "slfk",
+    "name": "Slovakia",
+    "pinyin": "siluofake",
+    "zh": "斯洛伐克"
+  },
+  "SL": {
+    "continent": "AF",
+    "initials": "slla",
+    "name": "Sierra Leone",
+    "pinyin": "sailaliang",
+    "zh": "塞拉利昂"
+  },
+  "SM": {
+    "continent": "EU",
+    "initials": "smln",
+    "name": "San Marino",
+    "pinyin": "shengmalinuo",
+    "zh": "圣马力诺"
+  },
+  "SN": {
+    "continent": "AF",
+    "initials": "snje",
+    "name": "Senegal",
+    "pinyin": "saineijiaer",
+    "zh": "塞内加尔"
+  },
+  "SO": {
+    "continent": "AF",
+    "initials": "sml",
+    "name": "Somalia",
+    "pinyin": "suomali",
+    "zh": "索马里"
+  },
+  "SR": {
+    "continent": "SA",
+    "initials": "sln",
+    "name": "Suriname",
+    "pinyin": "sulinan",
+    "zh": "苏里南"
+  },
+  "SS": {
+    "continent": "AF",
+    "initials": "nsd",
+    "name": "South Sudan",
+    "pinyin": "nansudan",
+    "zh": "南苏丹"
+  },
+  "ST": {
+    "continent": "AF",
+    "initials": "sdmhplxb",
+    "name": "Sao Tome and Principe",
+    "pinyin": "shengduomeihepulinxibi",
+    "zh": "圣多美和普林西比"
+  },
+  "SV": {
+    "continent": "NA",
+    "initials": "sewd",
+    "name": "El Salvador",
+    "pinyin": "saerwaduo",
+    "zh": "萨尔瓦多"
+  },
+  "SX": {
+    "continent": "NA",
+    "initials": "hssmd",
+    "name": "Sint Maarten (Dutch part)",
+    "pinyin": "heshushengmading",
+    "zh": "荷属圣马丁"
+  },
+  "SY": {
+    "continent": "AS",
+    "initials": "xly",
+    "name": "Syrian Arab Republic",
+    "pinyin": "xuliya",
+    "zh": "叙利亚"
+  },
+  "SZ": {
+    "continent": "AF",
+    "initials": "swsl",
+    "name": "Eswatini",
+    "pinyin": "siweishilan",
+    "zh": "斯威士兰"
+  },
+  "TC": {
+    "continent": "NA",
+    "initials": "tkshkksqd",
+    "name": "Turks and Caicos Islands",
+    "pinyin": "tekesihekaikesiqundao",
+    "zh": "特克斯和凯科斯群岛"
+  },
+  "TD": {
+    "continent": "AF",
+    "initials": "zd",
+    "name": "Chad",
+    "pinyin": "zhade",
+    "zh": "乍得"
+  },
+  "TF": {
+    "continent": "AN",
+    "initials": "fsnbld",
+    "name": "French Southern Territories",
+    "pinyin": "fashunanbulingdi",
+    "zh": "法属南部领地"
+  },
+  "TG": {
+    "continent": "AF",
+    "initials": "dg",
+    "name": "Togo",
+    "pinyin": "duoge",
+    "zh": "多哥"
+  },
+  "TH": {
+    "continent": "AS",
+    "initials": "tg",
+    "name": "Thailand",
+    "pinyin": "taiguo",
+    "zh": "泰国"
+  },
+  "TJ": {
+    "continent": "AS",
+    "initials": "tjkst",
+    "name": "Tajikistan",
+    "pinyin": "tajikesitan",
+    "zh": "塔吉克斯坦"
+  },
+  "TK": {
+    "continent": "OC",
+    "initials": "tkl",
+    "name": "Tokelau",
+    "pinyin": "tuokelao",
+    "zh": "托克劳"
+  },
+  "TL": {
+    "continent": "OC",
+    "initials": "ddw",
+    "name": "Timor-Leste",
+    "pinyin": "dongdiwen",
+    "zh": "东帝汶"
+  },
+  "TM": {
+    "continent": "AS",
+    "initials": "tkmst",
+    "name": "Turkmenistan",
+    "pinyin": "tukumansitan",
+    "zh": "土库曼斯坦"
+  },
+  "TN": {
+    "continent": "AF",
+    "initials": "tns",
+    "name": "Tunisia",
+    "pinyin": "tunisi",
+    "zh": "突尼斯"
+  },
+  "TO": {
+    "continent": "OC",
+    "initials": "tj",
+    "name": "Tonga",
+    "pinyin": "tangjia",
+    "zh": "汤加"
+  },
+  "TR": {
+    "continent": "AS",
+    "initials": "teq",
+    "name": "Türkiye",
+    "pinyin": "tuerqi",
+    "zh": "土耳其"
+  },
+  "TT": {
+    "continent": "NA",
+    "initials": "tlndhdbg",
+    "name": "Trinidad and Tobago",
+    "pinyin": "telinidaheduobage",
+    "zh": "特立尼达和多巴哥"
+  },
+  "TV": {
+    "continent": "OC",
+    "initials": "twl",
+    "name": "Tuvalu",
+    "pinyin": "tuwalu",
+    "zh": "图瓦卢"
+  },
+  "TW": {
+    "continent": "AS",
+    "initials": "tw",
+    "name": "Taiwan, Province of China",
+    "pinyin": "taiwan",
+    "zh": "台湾"
+  },
+  "TZ": {
+    "continent": "AF",
+    "initials": "tsny",
+    "name": "Tanzania, United Republic of",
+    "pinyin": "tansangniya",
+    "zh": "坦桑尼亚"
+  },
+  "UA": {
+    "continent": "EU",
+    "initials": "wkl",
+    "name": "Ukraine",
+    "pinyin": "wukelan",
+    "zh": "乌克兰"
+  },
+  "UG": {
+    "continent": "AF",
+    "initials": "wgd",
+    "name": "Uganda",
+    "pinyin": "wuganda",
+    "zh": "乌干达"
+  },
+  "UM": {
+    "continent": "OC",
+    "initials": "mgbtwxdy",
+    "name": "United States Minor Outlying Islands",
+    "pinyin": "meiguobentuwaixiaodaoyu",
+    "zh": "美国本土外小岛屿"
+  },
+  "US": {
+    "continent": "NA",
+    "initials": "mg",
+    "name": "United States",
+    "pinyin": "meiguo",
+    "zh": "美国"
+  },
+  "UY": {
+    "continent": "SA",
+    "initials": "wlg",
+    "name": "Uruguay",
+    "pinyin": "wulagui",
+    "zh": "乌拉圭"
+  },
+  "UZ": {
+    "continent": "AS",
+    "initials": "wzbkst",
+    "name": "Uzbekistan",
+    "pinyin": "wuzibiekesitan",
+    "zh": "乌兹别克斯坦"
+  },
+  "VA": {
+    "continent": "EU",
+    "initials": "fdg",
+    "name": "Holy See (Vatican City State)",
+    "pinyin": "fandigang",
+    "zh": "梵蒂冈"
+  },
+  "VC": {
+    "continent": "NA",
+    "initials": "swsthglnds",
+    "name": "Saint Vincent and the Grenadines",
+    "pinyin": "shengwensentehegelinnadingsi",
+    "zh": "圣文森特和格林纳丁斯"
+  },
+  "VE": {
+    "continent": "SA",
+    "initials": "wnrl",
+    "name": "Venezuela, Bolivarian Republic of",
+    "pinyin": "weineiruila",
+    "zh": "委内瑞拉"
+  },
+  "VG": {
+    "continent": "NA",
+    "initials": "yswejqd",
+    "name": "Virgin Islands, British",
+    "pinyin": "yingshuweierjingqundao",
+    "zh": "英属维尔京群岛"
+  },
+  "VI": {
+    "continent": "NA",
+    "initials": "mswejqd",
+    "name": "Virgin Islands, U.S.",
+    "pinyin": "meishuweierjingqundao",
+    "zh": "美属维尔京群岛"
+  },
+  "VN": {
+    "continent": "AS",
+    "initials": "yn",
+    "name": "Viet Nam",
+    "pinyin": "yuenan",
+    "zh": "越南"
+  },
+  "VU": {
+    "continent": "OC",
+    "initials": "wnat",
+    "name": "Vanuatu",
+    "pinyin": "wanuatu",
+    "zh": "瓦努阿图"
+  },
+  "WF": {
+    "continent": "OC",
+    "initials": "wlshftn",
+    "name": "Wallis and Futuna",
+    "pinyin": "walisihefutuna",
+    "zh": "瓦利斯和富图纳"
+  },
+  "WS": {
+    "continent": "OC",
+    "initials": "smy",
+    "name": "Samoa",
+    "pinyin": "samoya",
+    "zh": "萨摩亚"
+  },
+  "YE": {
+    "continent": "AS",
+    "initials": "ym",
+    "name": "Yemen",
+    "pinyin": "yemen",
+    "zh": "也门"
+  },
+  "YT": {
+    "continent": "AF",
+    "initials": "myt",
+    "name": "Mayotte",
+    "pinyin": "mayuete",
+    "zh": "马约特"
+  },
+  "ZA": {
+    "continent": "AF",
+    "initials": "nf",
+    "name": "South Africa",
+    "pinyin": "nanfei",
+    "zh": "南非"
+  },
+  "ZM": {
+    "continent": "AF",
+    "initials": "zby",
+    "name": "Zambia",
+    "pinyin": "zanbiya",
+    "zh": "赞比亚"
+  },
+  "ZW": {
+    "continent": "AF",
+    "initials": "jbbw",
+    "name": "Zimbabwe",
+    "pinyin": "jinbabuwei",
+    "zh": "津巴布韦"
+  }
+}

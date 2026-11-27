@@ -67,11 +67,19 @@ class ContractAdmin(admin.ModelAdmin):
     form = ContractAdminForm
     class Media:
         js = ("contracts/country.js", "contracts/contract_defaults.js")
-    list_display = ("contract_number", "oa_numbers_display", "customer_name", "salesperson", "signed_on", "currency", "amount", "status")
+    readonly_fields = ("continent",)
+    list_display = ("contract_number", "oa_numbers_display", "customer_name", "salesperson", "signed_on", "country", "continent", "currency", "amount", "status")
     list_filter = ("status", "business_type", "currency", "country", "signed_on")
     search_fields = ("contract_number", "oa_number", "oa_flows__number", "customer_name", "salesperson__username")
     inlines = [OAFlowInline, LineInline, MaterialInline, OutboundInline, ShipmentInline, ReceiptInline, AuditEventInline]
     actions = ["submit_selected", "approve_selected", "reject_selected"]
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if "continent" in fields:
+            fields.remove("continent")
+            fields.insert(fields.index("country") + 1, "continent")
+        return fields
 
     @admin.action(description="提交审核")
     def submit_selected(self, request, queryset):
