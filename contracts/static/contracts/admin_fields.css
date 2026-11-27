@@ -1,0 +1,13 @@
+/* Make required contract and inline labels easy to scan. */
+#content-main .form-row label.required,
+#content-main .inline-group th.required,
+#content-main .inline-group td label.required {
+  color: #c61928 !important;
+  font-weight: 800 !important;
+}
+#content-main .form-row label.required::after,
+#content-main .inline-group th.required::after,
+#content-main .inline-group td label.required::after {
+  content: " *";
+  color: #c61928;
+}

@@ -20,7 +20,7 @@ from types import SimpleNamespace
 from openpyxl import load_workbook
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 from .admin import ContractAdmin
-from .forms import ContractAdminForm, LineItemAdminForm, ReceiptAdminForm, three_months_after
+from .forms import ContractAdminForm, LineItemAdminForm, MaterialAdminForm, ReceiptAdminForm, three_months_after
 from .currency import conversion
 from .parser import parse_oa
 from .excel_import import flow_numbers, parse_workbook
@@ -51,7 +51,7 @@ class WorkbookFieldTests(TestCase):
         self.assertEqual(form.initial["inquiry_source"], "谷歌")
         self.assertEqual(str(form.initial["agreed_ship_on"]), "2027-02-28")
         self.assertIs(form.initial["customs_declared"], True)
-        self.assertIn("自行开发", [value for value, _ in form.fields["customer_category"].choices])
+        self.assertIn("自行开发", [value for value, _ in form.fields["inquiry_source"].choices])
         existing = Contract(business_type="内销", payment_method="阿里", customer_category="经销商", progress="已完成", customs_declared=False, signed_on=timezone.datetime(2026, 1, 31).date(), agreed_ship_on=timezone.datetime(2026, 3, 1).date())
         existing_form = ContractAdminForm(instance=existing)
         self.assertEqual(existing_form.initial["business_type"], "内销")
@@ -69,6 +69,26 @@ class WorkbookFieldTests(TestCase):
         self.assertIn('id="country-suggestions"', country_input)
         self.assertIn("泄漏仪表", [value for value, _ in LineItemAdminForm().fields["product_category"].choices])
         self.assertIn("美元", [value for value, _ in ReceiptAdminForm().fields["currency"].choices])
+
+    def test_updated_choices_required_amount_and_compact_notes(self):
+        form = ContractAdminForm()
+        self.assertTrue(form.fields["amount"].required)
+        self.assertIn(("自行开发", "自行开发"), list(form.fields["inquiry_source"].choices))
+        self.assertNotIn("自行开发", [value for value, _ in form.fields["customer_category"].choices])
+        legacy = ContractAdminForm(instance=Contract(customer_category="自行开发"))
+        self.assertNotIn("自行开发", [value for value, _ in legacy.fields["customer_category"].choices])
+        self.assertIn("width:160px", str(LineItemAdminForm()["notes"]))
+        material = MaterialAdminForm()
+        self.assertIn("width:160px", str(material["technical_parameters"]))
+        self.assertIn("width:160px", str(material["supply_requirement"]))
+
+    def test_admin_add_page_marks_required_fields(self):
+        admin_user = get_user_model().objects.create_superuser("field-admin", password="safe-password-123")
+        self.client.force_login(admin_user)
+        response = self.client.get("/admin/contracts/contract/add/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "contracts/admin_fields.css")
+        self.assertContains(response, 'class="required" for="id_amount"')
 
     def test_country_pinyin_normalizes_to_english_name(self):
         form = ContractAdminForm(instance=Contract())

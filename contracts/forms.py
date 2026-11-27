@@ -4,14 +4,14 @@ from django.templatetags.static import static
 from calendar import monthrange
 from datetime import date
 
-from .models import Contract, LineItem, Receipt
+from .models import Contract, LineItem, Material, Receipt
 from .geography import COUNTRIES, find_country
 
 
 OPTIONS = {
     "business_type": ["内销", "外销"],
-    "customer_category": ["最终用户", "经销商", "授权代理商", "EPC/系统集成商", "同行/OEM", "科研院所/高校", "自行开发", "其他"],
-    "inquiry_source": ["展会", "老客户转介绍", "客户主动询价", "其他", "百度", "谷歌", "站群"],
+    "customer_category": ["最终用户", "经销商", "授权代理商", "EPC/系统集成商", "同行/OEM", "科研院所/高校", "其他"],
+    "inquiry_source": ["展会", "老客户转介绍", "客户主动询价", "自行开发", "其他", "百度", "谷歌", "站群"],
     "product_category": ["泄漏仪表", "分析仪表", "回收车", "传感器", "回收管与接头", "氢气设备", "其他"],
     "product_subcategory": ["便携仪表", "固定仪表", "便携分析仪", "固定分析仪", "小型回收车", "中型回收车", "大型回收车", "真空泵", "新型绝缘气体设备", "气体再生回收车", "小型充气抽真空推车"],
     "currency": ["人民币", "美元", "欧元", "美金"],
@@ -52,14 +52,18 @@ class ContractAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name in ("business_type", "customer_category", "inquiry_source", "currency", "industry", "payment_method", "progress"):
-            self.fields[name] = choice_field(Contract._meta.get_field(name), OPTIONS[name], getattr(self.instance, name, ""))
-        for name in ("oa_number", "signed_on", "contract_number", "customer_category", "inquiry_source", "industry", "payment_method", "progress", "country", "agreed_ship_on"):
+            current = getattr(self.instance, name, "")
+            if name == "customer_category" and current == "自行开发":
+                current = ""
+            self.fields[name] = choice_field(Contract._meta.get_field(name), OPTIONS[name], current)
+        for name in ("oa_number", "signed_on", "contract_number", "customer_category", "inquiry_source", "industry", "payment_method", "progress", "country", "agreed_ship_on", "amount"):
             self.fields[name].required = True
         self.fields["customs_declared"].required = True
         self.fields["country"].help_text = "输入国家拼音、英文名称或两位代码（如 taiguo、Thailand、TH），选中后填写英文国名。"
         self.fields["business_type"].help_text = "默认外销（正式报关）；内销业务请自行改选。"
         self.fields["payment_method"].help_text = "默认公账；通过阿里或私账收款时请改选对应方式。"
-        self.fields["customer_category"].help_text = "默认最终用户；经销商、代理商、自行开发等请按实际情况改选。"
+        self.fields["customer_category"].help_text = "默认最终用户；经销商、代理商等请按实际情况改选。"
+        self.fields["amount"].help_text = "必填。按合同填写原币金额，不要根据 OA 供货物料数量推算。"
         self.fields["progress"].help_text = "默认生产中；生产完成或合同完成后请更新。"
         self.fields["agreed_ship_on"].help_text = "默认合同签订日期后三个自然月；可按合同约定修改。"
         self.fields["customs_declared"].help_text = "外销默认是；内销默认否，可按实际报关情况修改。"
@@ -74,7 +78,7 @@ class ContractAdminForm(forms.ModelForm):
         self.fields["agreed_ship_on"].widget.attrs["data-saved-value"] = "1" if self.instance.agreed_ship_on else "0"
         self.fields["customs_declared"].widget.attrs["data-saved-value"] = "1" if self.instance.customs_declared is not None else "0"
         self.fields["industry"].help_text = "默认电力与电气；其他行业请按客户实际情况改选。"
-        self.fields["inquiry_source"].help_text = "默认谷歌；来自展会、介绍或其他渠道时请改选。"
+        self.fields["inquiry_source"].help_text = "默认谷歌；自行开发、展会、介绍或其他渠道请改选。"
 
     def clean_customs_declared(self):
         value = self.cleaned_data["customs_declared"]
@@ -98,6 +102,7 @@ class LineItemAdminForm(forms.ModelForm):
     class Meta:
         model = LineItem
         fields = "__all__"
+        widgets = {"notes": forms.Textarea(attrs={"rows": 2, "cols": 20, "style": "width:160px;max-width:160px;box-sizing:border-box"})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -105,6 +110,16 @@ class LineItemAdminForm(forms.ModelForm):
             self.fields[name] = choice_field(LineItem._meta.get_field(name), OPTIONS[name], getattr(self.instance, name, ""))
             self.fields[name].required = True
         self.fields["model"].required = True
+
+
+class MaterialAdminForm(forms.ModelForm):
+    class Meta:
+        model = Material
+        fields = "__all__"
+        widgets = {
+            "technical_parameters": forms.Textarea(attrs={"rows": 2, "cols": 20, "style": "width:160px;max-width:160px;box-sizing:border-box"}),
+            "supply_requirement": forms.Textarea(attrs={"rows": 2, "cols": 20, "style": "width:160px;max-width:160px;box-sizing:border-box"}),
+        }
 
 
 class ReceiptAdminForm(forms.ModelForm):

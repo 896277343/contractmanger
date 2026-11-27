@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .forms import ContractAdminForm, LineItemAdminForm, ReceiptAdminForm
+from .forms import ContractAdminForm, LineItemAdminForm, MaterialAdminForm, ReceiptAdminForm
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 
 
@@ -22,6 +22,7 @@ class LineInline(admin.TabularInline):
 
 class MaterialInline(admin.TabularInline):
     model = Material
+    form = MaterialAdminForm
     extra = 0
     readonly_fields = ("source_oa_number", "source_sha256", "source_position")
 
@@ -66,6 +67,7 @@ class ContractAdmin(admin.ModelAdmin):
     form = ContractAdminForm
     class Media:
         js = ("contracts/country.js", "contracts/contract_defaults.js")
+        css = {"all": ("contracts/admin_fields.css",)}
     readonly_fields = ("continent",)
     list_display = ("contract_number", "oa_numbers_display", "customer_name", "salesperson", "signed_on", "country", "continent", "currency", "amount")
     list_filter = ("business_type", "currency", "country", "signed_on")
