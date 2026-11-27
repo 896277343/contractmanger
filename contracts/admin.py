@@ -66,7 +66,7 @@ class AuditEventInline(admin.TabularInline):
 class ContractAdmin(admin.ModelAdmin):
     form = ContractAdminForm
     class Media:
-        js = ("contracts/country.js",)
+        js = ("contracts/country.js", "contracts/contract_defaults.js")
     list_display = ("contract_number", "oa_numbers_display", "customer_name", "salesperson", "signed_on", "currency", "amount", "status")
     list_filter = ("status", "business_type", "currency", "country", "signed_on")
     search_fields = ("contract_number", "oa_number", "oa_flows__number", "customer_name", "salesperson__username")

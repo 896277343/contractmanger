@@ -25,6 +25,7 @@ from .excel_import import parse_workbook
 from .workflow_import import parse_workflow_xls
 from .oa_client import describe_oa_page, fetch_oa_html
 from .dashboard_data import build_dashboard
+from .forms import three_months_after
 
 
 def visible_contracts(user):
@@ -129,6 +130,24 @@ def oa_import_detail(data, materials_added, outbound_added):
             f"物料内容：{'；'.join(material_lines) or '无'}；识别已发货物料 {len(data['outbound_items'])} 条，本次新增 {outbound_added} 条")
 
 
+def fill_oa_defaults(contract):
+    defaults = {"business_type": "外销", "customer_category": "最终用户", "payment_method": "公账", "progress": "生产中"}
+    changed = []
+    for field, value in defaults.items():
+        if not getattr(contract, field):
+            setattr(contract, field, value)
+            changed.append(field)
+    if contract.customs_declared is None:
+        contract.customs_declared = contract.business_type == "外销"
+        changed.append("customs_declared")
+    if contract.agreed_ship_on is None and contract.signed_on:
+        contract.agreed_ship_on = three_months_after(contract.signed_on)
+        changed.append("agreed_ship_on")
+    if changed:
+        contract.save(update_fields=changed + ["updated_at"])
+    return changed
+
+
 def resolve_oa_owner(user, contract_number, signer):
     existing = Contract.objects.filter(contract_number=contract_number).select_related("salesperson").first()
     if existing:
@@ -163,11 +182,15 @@ def save_oa_import(request, data, filename, source):
             if not contract.signed_on and data.get("signed_on"):
                 contract.signed_on = date.fromisoformat(data["signed_on"])
                 contract.save(update_fields=["signed_on", "updated_at"])
-                date_note = f"；签订日期补充为 {contract.signed_on}"
+                date_note += f"；签订日期补充为 {contract.signed_on}"
+            defaults_added = fill_oa_defaults(contract)
+            if defaults_added:
+                date_note += "；补充默认字段 " + "、".join(defaults_added)
             lines_created, lines_updated, line_changes = merge_oa_line_items(contract, data["items"], data["sha256"])
             AuditEvent.objects.create(contract=contract, actor=request.user, action="补充OA详情", detail=oa_import_detail(data, materials_added, outbound_added) + date_note + f"；Line items 新增 {lines_created} 行、更新 {lines_updated} 行；" + "；".join(line_changes))
         else:
             contract = Contract.objects.create(oa_number=data["oa_number"], contract_number=data["contract_number"], customer_contract_number=data["customer_contract_number"], oa_signer=data["oa_signer"], salesperson=owner, customer_name=data["customer_name"], currency=data.get("currency") or (data["items"][0]["currency"] if data["items"] else ""), signed_on=date.fromisoformat(data["signed_on"]) if data.get("signed_on") else None, source_filename=filename[:255], source_sha256=data["sha256"])
+            fill_oa_defaults(contract)
             attach_flows(contract, [data["oa_number"]], source)
             materials_added, outbound_added = add_oa_details(contract, data)
             lines_created, lines_updated, line_changes = merge_oa_line_items(contract, data["items"], data["sha256"])

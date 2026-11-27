@@ -20,12 +20,13 @@ from types import SimpleNamespace
 from openpyxl import load_workbook
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 from .admin import ContractAdmin
-from .forms import ContractAdminForm, LineItemAdminForm, ReceiptAdminForm
+from .forms import ContractAdminForm, LineItemAdminForm, ReceiptAdminForm, three_months_after
 from .currency import conversion
 from .parser import parse_oa
 from .excel_import import flow_numbers, parse_workbook
 from .workflow_import import contract_candidates, parse_workflow_xls
 from .oa_client import describe_oa_page, fetch_oa_html
+from .views import fill_oa_defaults
 
 
 SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
@@ -35,6 +36,22 @@ SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
 
 
 class WorkbookFieldTests(TestCase):
+    def test_admin_defaults_and_existing_values(self):
+        form = ContractAdminForm(instance=Contract(signed_on=timezone.datetime(2026, 11, 30).date()))
+        self.assertEqual(form.initial["business_type"], "外销")
+        self.assertEqual(form.initial["payment_method"], "公账")
+        self.assertEqual(form.initial["customer_category"], "最终用户")
+        self.assertEqual(form.initial["progress"], "生产中")
+        self.assertEqual(str(form.initial["agreed_ship_on"]), "2027-02-28")
+        self.assertIs(form.initial["customs_declared"], True)
+        self.assertIn("自行开发", [value for value, _ in form.fields["customer_category"].choices])
+        existing = Contract(business_type="内销", payment_method="阿里", customer_category="经销商", progress="已完成", customs_declared=False, signed_on=timezone.datetime(2026, 1, 31).date(), agreed_ship_on=timezone.datetime(2026, 3, 1).date())
+        existing_form = ContractAdminForm(instance=existing)
+        self.assertEqual(existing_form.initial["business_type"], "内销")
+        self.assertEqual(existing_form.initial["agreed_ship_on"], existing.agreed_ship_on)
+        self.assertIs(existing_form.initial["customs_declared"], False)
+        self.assertEqual(str(three_months_after(timezone.datetime(2026, 11, 30).date())), "2027-02-28")
+
     def test_workbook_options_and_country_autocomplete(self):
         form = ContractAdminForm(instance=Contract(country="中国", customer_category="历史类别"))
         self.assertIn(("历史类别", "历史类别（已有值）"), list(form.fields["customer_category"].choices))
@@ -53,6 +70,15 @@ class WorkbookFieldTests(TestCase):
         form.cleaned_data = {"country": "ZZ"}
         with self.assertRaisesMessage(Exception, "请输入有效的两位国家代码"):
             form.clean_country()
+
+    def test_oa_defaults_preserve_entered_values(self):
+        owner = get_user_model().objects.create_user("defaults-owner")
+        contract = Contract.objects.create(contract_number="DEFAULT-1", salesperson=owner, business_type="内销", customer_category="经销商", payment_method="阿里", progress="已完成", customs_declared=False, signed_on=timezone.datetime(2026, 1, 31).date(), agreed_ship_on=timezone.datetime(2026, 2, 15).date())
+        self.assertEqual(fill_oa_defaults(contract), [])
+        contract.refresh_from_db()
+        self.assertEqual(contract.business_type, "内销")
+        self.assertIs(contract.customs_declared, False)
+        self.assertEqual(str(contract.agreed_ship_on), "2026-02-15")
 
 
 class WorkflowImportTests(TestCase):
@@ -223,6 +249,12 @@ class ImportTests(TestCase):
         contract.refresh_from_db()
         first.refresh_from_db()
         self.assertEqual(str(contract.signed_on), "2026-11-05")
+        self.assertEqual(str(contract.agreed_ship_on), "2027-02-05")
+        self.assertEqual(contract.business_type, "外销")
+        self.assertEqual(contract.payment_method, "公账")
+        self.assertEqual(contract.customer_category, "最终用户")
+        self.assertEqual(contract.progress, "生产中")
+        self.assertIs(contract.customs_declared, True)
         self.assertEqual(first.product_name, "Meter")
         self.assertEqual(first.model, "M-1")
         self.assertEqual(first.quantity, Decimal("2"))
