@@ -90,7 +90,7 @@ class LineItem(models.Model):
 
 class Material(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="materials")
-    position = models.PositiveIntegerField(default=1)
+    position = models.PositiveIntegerField(default=1, blank=True)
     code = models.CharField("物料编码", max_length=100, blank=True)
     name = models.CharField("物料名称", max_length=200, blank=True)
     specification = models.CharField("规格型号", max_length=200, blank=True)
@@ -111,7 +111,7 @@ class Material(models.Model):
 
 class OutboundItem(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="outbound_items")
-    position = models.PositiveIntegerField(default=1)
+    position = models.PositiveIntegerField(default=1, blank=True)
     document_number = models.CharField("出库单据编号", max_length=100, blank=True)
     flow_number = models.CharField("出库流水号", max_length=100, blank=True)
     material_code = models.CharField("物料编码", max_length=100, blank=True)
@@ -131,7 +131,7 @@ class OutboundItem(models.Model):
 
 class Shipment(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="shipments")
-    shipped_on = models.DateField("实际发货日期")
+    shipped_on = models.DateField("实际发货日期", null=True, blank=True)
     amount = models.DecimalField("本次发货金额(原币)", max_digits=18, decimal_places=2, null=True, blank=True)
     tracking = models.CharField("物流及单号", max_length=255, blank=True)
     notes = models.TextField(blank=True)

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .forms import ContractAdminForm, LineItemAdminForm, MaterialAdminForm, ReceiptAdminForm
+from .forms import ContractAdminForm, LineItemAdminForm, MaterialAdminForm, OutboundItemAdminForm, ReceiptAdminForm
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 
 
@@ -29,6 +29,7 @@ class MaterialInline(admin.TabularInline):
 
 class OutboundInline(admin.TabularInline):
     model = OutboundItem
+    form = OutboundItemAdminForm
     extra = 0
     readonly_fields = ("source_oa_number", "source_sha256", "source_position")
 

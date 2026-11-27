@@ -102,7 +102,7 @@ def build_dashboard(user, params):
             if c.signed_on:
                 entries.append((c, c.signed_on, normalized_currency(c.currency) or "未填币种", c.amount, None))
         elif metric == "shipped":
-            entries.extend((c, s.shipped_on, normalized_currency(c.currency) or "未填币种", s.amount, None) for s in c.shipments.all())
+            entries.extend((c, s.shipped_on, normalized_currency(c.currency) or "未填币种", s.amount, None) for s in c.shipments.all() if s.shipped_on)
         else:
             entries.extend((c, r.received_on, normalized_currency(r.currency), r.amount, r) for r in c.receipts.all() if r.received_on and r.currency and r.amount is not None)
     if year != "all":

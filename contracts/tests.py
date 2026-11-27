@@ -20,7 +20,7 @@ from types import SimpleNamespace
 from openpyxl import load_workbook
 from .models import AuditEvent, Contract, LineItem, Material, OAFlow, OutboundItem, Receipt, Shipment
 from .admin import ContractAdmin
-from .forms import ContractAdminForm, LineItemAdminForm, MaterialAdminForm, ReceiptAdminForm, three_months_after
+from .forms import ContractAdminForm, LineItemAdminForm, MaterialAdminForm, OutboundItemAdminForm, ReceiptAdminForm, three_months_after
 from .currency import conversion
 from .parser import parse_oa
 from .excel_import import flow_numbers, parse_workbook
@@ -37,6 +37,17 @@ SAMPLE = '''<script>var g_run_id = "12345";</script><body>流水号:12345
 
 
 class WorkbookFieldTests(TestCase):
+    def test_optional_inline_positions_and_shipment_date(self):
+        from django.forms import modelform_factory
+
+        self.assertFalse(MaterialAdminForm().fields["position"].required)
+        self.assertFalse(OutboundItemAdminForm().fields["position"].required)
+        self.assertFalse(modelform_factory(Shipment, fields=["shipped_on"])().fields["shipped_on"].required)
+        for form_class in (MaterialAdminForm, OutboundItemAdminForm):
+            form = form_class()
+            form.cleaned_data = {"position": None}
+            self.assertEqual(form.clean_position(), 1)
+
     def test_receipt_fields_are_optional(self):
         form = ReceiptAdminForm()
         for name in ("received_on", "currency", "amount", "exchange_rate", "notes"):

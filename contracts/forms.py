@@ -4,7 +4,7 @@ from django.templatetags.static import static
 from calendar import monthrange
 from datetime import date
 
-from .models import Contract, LineItem, Material, Receipt
+from .models import Contract, LineItem, Material, OutboundItem, Receipt
 from .geography import COUNTRIES, find_country
 
 
@@ -120,6 +120,18 @@ class MaterialAdminForm(forms.ModelForm):
             "technical_parameters": forms.Textarea(attrs={"rows": 2, "cols": 20, "style": "width:160px;max-width:160px;box-sizing:border-box"}),
             "supply_requirement": forms.Textarea(attrs={"rows": 2, "cols": 20, "style": "width:160px;max-width:160px;box-sizing:border-box"}),
         }
+
+    def clean_position(self):
+        return self.cleaned_data["position"] or self.instance.position or 1
+
+
+class OutboundItemAdminForm(forms.ModelForm):
+    class Meta:
+        model = OutboundItem
+        fields = "__all__"
+
+    def clean_position(self):
+        return self.cleaned_data["position"] or self.instance.position or 1
 
 
 class ReceiptAdminForm(forms.ModelForm):
